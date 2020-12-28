@@ -26,7 +26,6 @@ const PostSchema = new Schema({
         type: Array,
         default: [],
     },
-
 },
 {
     timestamps: true,

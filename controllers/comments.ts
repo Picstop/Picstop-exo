@@ -15,14 +15,16 @@ export default class CommentController {
             comment,
         });
 
-        return newComment.save()
+        return newComment
+            .save()
             .then((result: any) => res.status(201).json({ success: true, message: result }))
             .catch((err: any) => res.status(500).json({ success: false, message: err.message }));
     }
 
     getComment(req: Request, res: Response, next: NextFunction) {
         const { id } = req.query;
-        Comment.findById(id).exec()
+        Comment.findById(id)
+            .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => res.status(500).json({ success: false, message: err }));
     }
@@ -30,7 +32,8 @@ export default class CommentController {
     editComment(req: Request, res: Response, next: NextFunction) {
         const { id } = req.query;
         const { comment } = req.body;
-        Comment.findByIdAndUpdate(id, { comment }).exec()
+        Comment.findByIdAndUpdate(id, { comment })
+            .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => res.status(500).json({ success: false, message: err }));
     }
@@ -39,17 +42,21 @@ export default class CommentController {
         const { id } = req.query;
         const commentAuthor = await Comment.findById(id).exec();
         if (commentAuthor !== req.user.id) {
-            return res.status(401).json({ success: false, message: 'User is not author of post.' });
+            return res
+                .status(401)
+                .json({ success: false, message: 'User is not author of post.' });
         }
 
-        await Comment.findByIdAndRemove(id).exec()
+        await Comment.findByIdAndRemove(id)
+            .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => res.status(500).json({ success: false, message: err }));
     }
 
     likeComment(req: Request, res: Response, next: NextFunction) {
         const { commentId } = req.query;
-        Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user.id } }).exec()
+        Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user.id } })
+            .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => res.status(500).json({ success: false, message: err }));
     }
