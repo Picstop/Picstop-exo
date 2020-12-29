@@ -28,7 +28,8 @@ export default class QuadrantController {
             case 0:
                 dims = {
                     minLat: (dims.maxLat - dims.minLat) / 2 + dims.minLat,
-                    minLong: (dims.maxLong - dims.minLong) / 2 + dims.minLong,
+                    minLong:
+                            (dims.maxLong - dims.minLong) / 2 + dims.minLong,
                     maxLat: dims.maxLat,
                     maxLong: dims.maxLong,
                 };
@@ -38,7 +39,8 @@ export default class QuadrantController {
                     minLat: (dims.maxLat - dims.minLat) / 2 + dims.minLat,
                     minLong: dims.minLong,
                     maxLat: dims.maxLat,
-                    maxLong: (dims.maxLong - dims.minLong) / 2 + dims.minLong,
+                    maxLong:
+                            (dims.maxLong - dims.minLong) / 2 + dims.minLong,
                 };
                 break;
             case 2:
@@ -46,13 +48,15 @@ export default class QuadrantController {
                     minLat: dims.minLat,
                     minLong: dims.minLong,
                     maxLat: (dims.maxLat - dims.minLat) / 2 + dims.minLat,
-                    maxLong: (dims.maxLong = dims.minLong) / 2 + dims.minLong,
+                    maxLong:
+                            (dims.maxLong = dims.minLong) / 2 + dims.minLong,
                 };
                 break;
             case 3:
                 dims = {
                     minLat: dims.minLat,
-                    minLong: (dims.maxLong - dims.minLong) / 2 + dims.minLong,
+                    minLong:
+                            (dims.maxLong - dims.minLong) / 2 + dims.minLong,
                     maxLat: (dims.maxLat - dims.minLat) / 2 + dims.minLat,
                     maxLong: dims.maxLong,
                 };
@@ -92,7 +96,7 @@ export default class QuadrantController {
                 return res.status(500).json({
                     success: false,
                     message:
-            'There is a pre-established nearby location within 10 meters.',
+                        'There is a pre-established nearby location within 10 meters.',
                 });
             }
 
@@ -115,18 +119,22 @@ export default class QuadrantController {
             // console.log(leafQuadInfo!.locations);
             if (leafQuadInfo!.locations.length < 10) {
                 await leafQuadInfo!.locations.push(addLoc._id);
-        leafQuadInfo!
-            .save()
-            .then(() => addLoc.save())
-            .then(() => res.status(200).json({ success: true, message: addLoc }))
-            .catch((err: any) => res.status(500).json({ success: false, message: err }));
+                leafQuadInfo!
+                    .save()
+                    .then(() => addLoc.save())
+                    .then(() => res.status(200).json({ success: true, message: addLoc }))
+                    .catch((err: any) => res.status(500).json({ success: false, message: err }));
             } else {
                 addLoc.save().then(() => {
                     this.growTree(leafQuad, addLoc)
-                        .then(() => res
-                            .status(200)
-                            .json({ success: true, message: addLoc, grew: true }))
-                        .catch((err: any) => res.status(500).json({ success: false, message: err }));
+                        .then(() => res.status(200).json({
+                            success: true,
+                            message: addLoc,
+                            grew: true,
+                        }))
+                        .catch((err: any) => res
+                            .status(500)
+                            .json({ success: false, message: err }));
                 });
             }
         } catch (error) {
@@ -154,12 +162,12 @@ export default class QuadrantController {
         };
         Quadrant.updateOne({ _id: quadrantId }, { isLeaf: false })
             .exec()
-        // Quadrant.updateOne({ _id: quadrantId }, { isLeaf: false, $unset: { locations: 1 } }).exec()
+            // Quadrant.updateOne({ _id: quadrantId }, { isLeaf: false, $unset: { locations: 1 } }).exec()
             .then((result: any) => {
                 console.log(result);
                 return location;
             })
-        // console.log('parent quad updated');
+            // console.log('parent quad updated');
 
             .catch((error: any) => {
                 throw new Error(error);
@@ -214,9 +222,9 @@ export default class QuadrantController {
     checkBounds(lat: number, long: number, dims: Dimension) {
         return (
             lat > dims.minLat
-      && lat <= dims.maxLat
-      && long > dims.minLong
-      && long <= dims.maxLong
+            && lat <= dims.maxLat
+            && long > dims.minLong
+            && long <= dims.maxLong
         );
     }
 

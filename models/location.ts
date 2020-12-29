@@ -2,29 +2,28 @@ import mongoose, { Schema } from 'mongoose';
 
 import { Location } from '../types/types';
 
-const locationSchema = new Schema({
-
-    name: {
-        type: String,
-        required: true,
+const locationSchema = new Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+        },
+        geoLocation: {
+            type: { type: String },
+            coordinates: [],
+        },
+        author: {
+            type: String,
+            default: 'Picstop',
+        },
+        isOfficial: {
+            type: Boolean,
+        },
     },
-    geoLocation: {
-        type: { type: String },
-        coordinates: [],
+    {
+        timestamps: true,
     },
-    author: {
-        type: String,
-        default: 'Picstop',
-    },
-    isOfficial: {
-        type: Boolean,
-
-    },
-
-},
-{
-    timestamps: true,
-});
+);
 
 locationSchema.index({ geoLocation: '2dsphere' });
 
