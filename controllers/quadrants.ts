@@ -78,7 +78,7 @@ export default class QuadrantController {
                 lat, long, name, author,
             } = req.body;
 
-            const isOffical = author === 'Picstop';
+            const isOfficial = author === 'Picstop';
 
             // check params
             if (!lat || !long || !name || !author) {
@@ -109,7 +109,7 @@ export default class QuadrantController {
                 geoLocation: { type: 'Point', coordinates: [lat, long] },
                 name,
                 author,
-                isOffical,
+                isOfficial,
             });
             // Finding quadrant for location, if leaf has less than 10 locs, add location, else grow tree
             const leafQuad = await this.findLeaf(
