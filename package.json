@@ -25,7 +25,9 @@
     "mongoose": "^5.11.8",
     "passport": "^0.4.1",
     "passport-local-mongoose": "^6.0.1",
-    "ts-node-dev": "^1.1.1"
+    "prettier": "^2.2.1",
+    "ts-node-dev": "^1.1.1",
+    "winston": "^3.3.3"
   },
   "scripts": {
     "start": "node dist/index.js",
