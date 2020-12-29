@@ -129,7 +129,7 @@ export default class QuadrantController {
                     .then(() => res.status(200).json({ success: true, message: addLoc }))
                     .catch((err: any) => {
                         logger.error(`Error when pushing a location ${addLoc._id}: ${err}`);
-                        res.status(500).json({ success: false, message: err });
+                        return res.status(500).json({ success: false, message: err });
                     });
             } else {
                 addLoc.save().then(() => {

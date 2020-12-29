@@ -23,7 +23,7 @@ export default class CommentController {
             .then((result: any) => res.status(201).json({ success: true, message: result }))
             .catch((err: any) => {
                 logger.error(`Error while creating a new comment: ${err}`);
-                res.status(500).json({ success: false, message: err.message });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
