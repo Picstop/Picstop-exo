@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express from 'express';
 import passport from 'passport';
+import morgan from 'morgan';
 
 import * as userController from './controllers/user';
 import Location from './models/location';
@@ -20,6 +21,8 @@ const logger = initLogger('index');
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(morgan('dev')); // TODO: add support for different environments
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

@@ -23,6 +23,7 @@
     "express": "^4.17.1",
     "lodash": "^4.17.20",
     "mongoose": "^5.11.8",
+    "morgan": "^1.10.0",
     "passport": "^0.4.1",
     "passport-local-mongoose": "^6.0.1",
     "prettier": "^2.2.1",
