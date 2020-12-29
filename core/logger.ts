@@ -5,7 +5,7 @@ import winston, { Logger } from 'winston';
  * @param {string} uid The unique id for the logger.
  * @return {winston.Logger} The logger object.
  */
-function init(uid: string): Logger {
+function initLogger(uid: string): Logger {
     const logger = winston.createLogger({
         level: process.env.LOG_LEVEL || 'info',
         format: winston.format.combine(
@@ -27,4 +27,4 @@ function init(uid: string): Logger {
     return logger;
 }
 
-export default init;
+export default initLogger;

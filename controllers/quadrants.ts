@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import _ from 'lodash';
+import { loggers } from 'winston';
 import {
     Dimension,
     Location as LocationType,
@@ -8,10 +9,13 @@ import {
 
 import Location from '../models/location';
 import Quadrant from '../models/quadrant';
+import initLogger from '../core/logger';
 
 /* eslint-disable no-underscore-dangle */
 
 /* eslint-disable class-methods-use-this */
+
+const logger = initLogger('ControllerQuadrant');
 
 export default class QuadrantController {
     findBounds(quadrantId: QuadrantType['_id']) {
@@ -123,7 +127,10 @@ export default class QuadrantController {
                     .save()
                     .then(() => addLoc.save())
                     .then(() => res.status(200).json({ success: true, message: addLoc }))
-                    .catch((err: any) => res.status(500).json({ success: false, message: err }));
+                    .catch((err: any) => {
+                        logger.error(`Error when pushing a location ${addLoc._id}: ${err}`);
+                        res.status(500).json({ success: false, message: err });
+                    });
             } else {
                 addLoc.save().then(() => {
                     this.growTree(leafQuad, addLoc)
@@ -132,12 +139,14 @@ export default class QuadrantController {
                             message: addLoc,
                             grew: true,
                         }))
-                        .catch((err: any) => res
-                            .status(500)
-                            .json({ success: false, message: err }));
+                        .catch((err: any) => {
+                            logger.error(`Error when adding a location ${addLoc._id} to tree: ${err}`);
+                            return res.status(500).json({ success: false, message: err });
+                        });
                 });
             }
         } catch (error) {
+            logger.error(`Error when adding a location: ${error}`);
             return res.status(500).json({ success: false, message: error });
         }
     }
@@ -164,12 +173,13 @@ export default class QuadrantController {
             .exec()
             // Quadrant.updateOne({ _id: quadrantId }, { isLeaf: false, $unset: { locations: 1 } }).exec()
             .then((result: any) => {
-                console.log(result);
+                logger.debug(`Result while updating a Quadrant: ${result}`);
                 return location;
             })
             // console.log('parent quad updated');
 
             .catch((error: any) => {
+                logger.error(`Error while updating a Quadrant: ${error}`);
                 throw new Error(error);
             });
 
@@ -211,6 +221,7 @@ export default class QuadrantController {
                     }
                 })
                 .catch((err) => {
+                    logger.error(`Result while saving a Quadrant: ${err}`);
                     throw new Error(err);
                 });
 

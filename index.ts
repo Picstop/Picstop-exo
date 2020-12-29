@@ -4,16 +4,19 @@ import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express from 'express';
 import passport from 'passport';
-import * as userController from './controllers/user';
 
+import * as userController from './controllers/user';
 import Location from './models/location';
 import Quadrant from './models/quadrant';
 import db from './database/database';
 import locationRoutes from './routes/locations';
+import initLogger from './core/logger';
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
+
+const logger = initLogger('index');
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -28,7 +31,7 @@ app.post('/logout', userController.logout);
 app.use('/locations', locationRoutes);
 
 db.then(async () => {
-    console.log('Successfully Connected to MongoDB');
+    logger.info('Successfully Connected to MongoDB');
 
     /* const location = await Location.find({}).exec();
     const quadrant = await Quadrant.findById('1').exec();
@@ -37,9 +40,8 @@ db.then(async () => {
     });
     await quadrant!.save();
     console.log('Saved'); */
-})
-    .catch((err) => console.log(err));
+}).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
 
 app.listen(port, () => {
-    console.log(`Ready on port ${port}`);
+    logger.info(`Ready on port ${port}`);
 });
