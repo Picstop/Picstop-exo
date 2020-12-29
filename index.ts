@@ -28,6 +28,11 @@ app.post('/signup', userController.postSignup);
 app.post('/login', userController.postLogin);
 app.post('/logout', userController.logout);
 
+app.get('/', (req, res) => {
+    logger.debug('Base endpoint works.');
+    res.send('Hello world!');
+});
+
 app.use('/locations', locationRoutes);
 
 db.then(async () => {
