@@ -3,5 +3,11 @@
       "source.fixAll.eslint": true,
       "editor.formatOnSave": true
     },
-    "eslint.validate": ["typescript"]
+    "eslint.validate": [
+      "typescript"
+    ],
+    "cSpell.words": [
+      "picstop",
+      "signup"
+    ]
 }
