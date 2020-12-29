@@ -1,1 +1,0 @@
-// Since all .log files are ignored in .gitignore, we need to still keep this directory or git will remove it from cache
