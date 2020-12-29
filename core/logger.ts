@@ -1,4 +1,5 @@
 import winston, { Logger } from 'winston';
+import path from 'path';
 
 /**
  * Returns a new Winston logger with global configs or default.
@@ -20,7 +21,7 @@ function initLogger(uid: string): Logger {
 
     logger.add(
         new winston.transports.File({
-            filename: process.env.LOG_FILE || '../logs/default.log',
+            filename: process.env.LOG_FILE_PATH || `${path.dirname(require.main.filename)}/logs/default.log`,
         }),
     );
 
