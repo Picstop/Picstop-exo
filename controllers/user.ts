@@ -1,9 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
-
 import { IVerifyOptions } from 'passport-local';
 import passport from 'passport';
+
 import { IUser } from '../types/types';
 import User from '../models/user';
+import initLogger from '../core/logger';
+
+const logger = initLogger('ControllerUser');
 
 export const postSignup = async (req: Request, res: Response) => {
     const user = new User({
@@ -15,21 +18,29 @@ export const postSignup = async (req: Request, res: Response) => {
 
     User.findOne({ email: req.body.email }, (err: any, existingUser: IUser) => {
         if (err) {
-            return res.status(401).json({ success: false, message: err });
+            logger.error(`Error when finding a user: ${err}`);
+            res.status(401).json({ success: false, message: err });
         }
         if (existingUser) {
+            logger.info(`User already exists: ${err}`);
             return res.status(403).json({ success: false, message: err });
         }
-        user.save((e) => {
-            if (e) {
-                return res.status(403).json({ success: false, message: e });
+        user.save((err) => {
+            if (err) {
+                logger.error(`Error when saving a user: ${err}`);
+                return res.status(403).json({ success: false, message: err });
             }
-            req.logIn(user, (error) => {
-                if (error) {
-                    return res.status(401).json({ success: false, message: error });
+            req.logIn(user, (err) => {
+                if (err) {
+                    logger.error(`Error when logging a user in: ${err}`);
+                    return res
+                        .status(401)
+                        .json({ success: false, message: err });
                 }
                 passport.authenticate('local');
-                return res.status(200).json({ success: true, message: 'user created' });
+                return res
+                    .status(200)
+                    .json({ success: true, message: 'user created' });
             });
         });
 
@@ -42,20 +53,25 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
         'local',
         (err: Error, user: IUser) => {
             if (err) {
+                logger.error(`Error when authenticating: ${err}`);
                 return next(err);
             }
             if (!user) {
+                logger.error(`User doesn't exist: ${err}`);
                 return res
                     .status(401)
                     .json({ success: false, message: 'user doesn\'t exist' });
             }
-            req.logIn(user, (e) => {
-                if (e) {
+            req.logIn(user, (err) => {
+                if (err) {
+                    logger.error(`Error when logging a user in: ${err}`);
                     return res
                         .status(403)
                         .json({ success: false, message: 'login error' });
                 }
-                return res.status(200).json({ success: true, message: 'logged in' });
+                return res
+                    .status(200)
+                    .json({ success: true, message: 'logged in' });
             });
         },
     )(req, res, next);
