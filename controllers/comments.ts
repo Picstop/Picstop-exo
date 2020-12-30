@@ -1,5 +1,3 @@
-import * as mongoose from 'mongoose';
-
 /* eslint-disable class-methods-use-this */
 import { NextFunction, Request, Response } from 'express';
 
@@ -29,7 +27,7 @@ export default class CommentController {
 
     getComment(req: Request, res: Response, next: NextFunction) {
         const { id } = req.query;
-        Comment.findById(id)
+        return Comment.findById(id)
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
@@ -41,7 +39,7 @@ export default class CommentController {
     editComment(req: Request, res: Response, next: NextFunction) {
         const { id } = req.query;
         const { comment } = req.body;
-        Comment.findByIdAndUpdate(id, { comment })
+        return Comment.findByIdAndUpdate(id, { comment })
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
@@ -61,7 +59,7 @@ export default class CommentController {
                 .json({ success: false, message: 'User is not author of post.' });
         }
 
-        await Comment.findByIdAndRemove(id)
+        return await Comment.findByIdAndRemove(id)
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
@@ -72,7 +70,7 @@ export default class CommentController {
 
     likeComment(req: Request, res: Response, next: NextFunction) {
         const { commentId } = req.query;
-        Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user.id } })
+        return Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user.id } })
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {

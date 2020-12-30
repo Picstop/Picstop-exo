@@ -8,11 +8,7 @@ import initLogger from '../core/logger';
 
 const logger = initLogger('ControllerUser');
 
-export const postSignup = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
+export const postSignup = async (req: Request, res: Response) => {
     const user = new User({
         email: req.body.email,
         password: req.body.password,
@@ -52,14 +48,10 @@ export const postSignup = async (
     });
 };
 
-export const postLogin = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
+export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(
         'local',
-        (err: Error, user: IUser, info: IVerifyOptions) => {
+        (err: Error, user: IUser) => {
             if (err) {
                 logger.error(`Error when authenticating: ${err}`);
                 return next(err);

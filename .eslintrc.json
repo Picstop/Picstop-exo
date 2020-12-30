@@ -4,12 +4,14 @@
         "es2021": true
     },
     "extends": [
-    "airbnb-base"
+    "airbnb-base",
+    "plugin:import/typescript"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 12,
-        "sourceType": "module"
+        "sourceType": "module",
+        "project": "./tsconfig.json"
     },
     "plugins": [
         "@typescript-eslint"
@@ -19,6 +21,16 @@
         "quotes": ["error", "single"],
         "semi": ["error", "always"],
         "max-len": ["error", { "code": 200 }],
-        "object-curly-spacing": ["error", "always"]
+        "object-curly-spacing": ["error", "always"],
+        "no-console": "off",
+        "allowForLoopAfterthoughts": true,
+        "import/extensions": [
+            "error",
+            "ignorePackages",
+            {
+                "ts": "never"
+            }
+        ]
     }
+   
 }

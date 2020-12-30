@@ -32,16 +32,6 @@ export type Comment = Document & {
   likes: Array<mongoose.Schema.Types.ObjectId>;
 };
 
-export type Quadrant = Document & {
-  _id: String;
-  locations: Array<mongoose.Schema.Types.ObjectId>;
-  minLat: number;
-  minLong: number;
-  maxLat: number;
-  maxLong: number;
-  isLeaf: boolean;
-};
-
 export type Location = Document & {
   geoLocation: any;
   name: string;
