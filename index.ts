@@ -1,15 +1,14 @@
 import * as dotenv from 'dotenv';
-import { Strategy as LocalStrategy } from 'passport-local';
-import bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
-import express from 'express';
-import passport from 'passport';
 import * as userController from './controllers/user';
 
+import { Strategy as LocalStrategy } from 'passport-local';
 import Location from './models/location';
-import Quadrant from './models/quadrant';
+import bcrypt from 'bcrypt';
+import bodyParser from 'body-parser';
 import db from './database/database';
+import express from 'express';
 import locationRoutes from './routes/locations';
+import passport from 'passport';
 
 dotenv.config();
 const app = express();
@@ -38,7 +37,8 @@ db.then(async () => {
     await quadrant!.save();
     console.log('Saved'); */
 })
-    .catch((err) => console.log(err));
+.catch((err) => console.log(err));
+
 
 app.listen(port, () => {
     console.log(`Ready on port ${port}`);

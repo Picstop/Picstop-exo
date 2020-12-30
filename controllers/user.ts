@@ -5,11 +5,7 @@ import passport from 'passport';
 import { IUser } from '../types/types';
 import User from '../models/user';
 
-export const postSignup = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
+export const postSignup = async (req: Request, res: Response) => {
     const user = new User({
         email: req.body.email,
         password: req.body.password,
@@ -19,18 +15,18 @@ export const postSignup = async (
 
     User.findOne({ email: req.body.email }, (err: any, existingUser: IUser) => {
         if (err) {
-            res.status(401).json({ success: false, message: err });
+            return res.status(401).json({ success: false, message: err });
         }
         if (existingUser) {
             return res.status(403).json({ success: false, message: err });
         }
-        user.save((err) => {
-            if (err) {
-                return res.status(403).json({ success: false, message: err });
+        user.save((e) => {
+            if (e) {
+                return res.status(403).json({ success: false, message: e });
             }
-            req.logIn(user, (err) => {
-                if (err) {
-                    return res.status(401).json({ success: false, message: err });
+            req.logIn(user, (error) => {
+                if (error) {
+                    return res.status(401).json({ success: false, message: error });
                 }
                 passport.authenticate('local');
                 return res.status(200).json({ success: true, message: 'user created' });
@@ -41,14 +37,10 @@ export const postSignup = async (
     });
 };
 
-export const postLogin = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
+export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(
         'local',
-        (err: Error, user: IUser, info: IVerifyOptions) => {
+        (err: Error, user: IUser) => {
             if (err) {
                 return next(err);
             }
@@ -57,8 +49,8 @@ export const postLogin = async (
                     .status(401)
                     .json({ success: false, message: 'user doesn\'t exist' });
             }
-            req.logIn(user, (err) => {
-                if (err) {
+            req.logIn(user, (e) => {
+                if (e) {
                     return res
                         .status(403)
                         .json({ success: false, message: 'login error' });

@@ -9,9 +9,11 @@ const locationSchema = new Schema({
         required: true,
     },
     geoLocation: {
-        type: { type: String },
+        type: {
+          type: String,
+        },
         coordinates: [],
-    },
+      },
     author: {
         type: String,
         default: 'Picstop',
