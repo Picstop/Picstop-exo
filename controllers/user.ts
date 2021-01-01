@@ -16,15 +16,7 @@ export const postSignup = async (req: Request, res: Response) => {
         name: req.body.name,
     });
 
-    User.findOne({ email: req.body.email }, (err: any, existingUser: IUser) => {
-        if (err) {
-            logger.error(`Error when finding a user: ${err}`);
-            res.status(401).json({ success: false, message: err });
-        }
-        if (existingUser) {
-            logger.info(`User already exists: ${err}`);
-            return res.status(403).json({ success: false, message: err });
-        }
+       
         user.save((err) => {
             if (err) {
                 logger.error(`Error when saving a user: ${err}`);
@@ -33,19 +25,15 @@ export const postSignup = async (req: Request, res: Response) => {
             req.logIn(user, (err) => {
                 if (err) {
                     logger.error(`Error when logging a user in: ${err}`);
-                    return res
-                        .status(401)
-                        .json({ success: false, message: err });
+                    return res.status(401).json({ success: false, message: err });
                 }
                 passport.authenticate('local');
-                return res
-                    .status(200)
-                    .json({ success: true, message: 'user created' });
+                return res.status(200).json({ success: true, message: 'User created and logged in successfully' });
             });
         });
 
         passport.authenticate('local');
-    });
+    
 };
 
 export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -58,20 +46,14 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
             }
             if (!user) {
                 logger.error(`User doesn't exist: ${err}`);
-                return res
-                    .status(401)
-                    .json({ success: false, message: 'user doesn\'t exist' });
+                return res.status(401).json({ success: false, message: 'user doesn\'t exist' });
             }
             req.logIn(user, (err) => {
                 if (err) {
                     logger.error(`Error when logging a user in: ${err}`);
-                    return res
-                        .status(403)
-                        .json({ success: false, message: 'login error' });
+                    return res.status(403).json({ success: false, message: 'login error' });
                 }
-                return res
-                    .status(200)
-                    .json({ success: true, message: 'logged in' });
+                return res.status(200).json({ success: true, message: 'logged in' });
             });
         },
     )(req, res, next);
