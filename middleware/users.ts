@@ -4,8 +4,9 @@ import User from '../models/user';
 import initLogger from '../core/logger';
 
 const logger = initLogger('MiddlewareUser');
-const UsernameRegex=^([^\s]+[A-Z]|[a-z]|[0-9]|[_]|[.]){3,20}$;
-const PasswordRegex=^([^\s]){6,20}$;
+const UsernameRegex=/^([^\s]+[A-Z]|[a-z]|[0-9]|[_]|[.]){3,20}$/;
+const PasswordRegex=/^([^\s]){6,20}$/;
+const EmailRegex=/^[^\s@]+@([^\s@.,]+.)+[^\s@.,]{2,}$/;
 /*
 function validUser(req: Request, res: Response, next: NextFunction){
     Promise.allSettled([
@@ -34,7 +35,9 @@ function validUser(req: Request, res: Response, next: NextFunction){
             if (existingUser){
                 res.status(200).json({ success: false, message: 'Email already exists' });
             } else {
-                next()
+                if(existingUser.username.match(EmailRegex))
+                return resolve(true);
+                else return reject({ success: false, message: 'Email is invalid'});
             }
         }).catch(err=>{
             logger.error(`Error finding existing user with email ${email} with error ${err}`)
@@ -88,7 +91,9 @@ export default class UserMiddleware {
             if (existingUser){
                 res.status(200).json({ success: false, message: 'Email already exists' });
             } else {
-                next()
+                if (existingUser.username.match(EmailRegex))
+                return resolve(true);
+                else return reject({ success: false, message: 'Email is invalid'});
             }
         })
     }
