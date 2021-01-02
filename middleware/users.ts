@@ -51,11 +51,11 @@ export default class UserMiddleware {
 
     checkPasswordMatch(req: Request, res: Response, next: NextFunction){
         const { password, password2 } = req.body;
-        if (password === password2) {
-            next()
-        } else {
-            return res.status(400).json({ success: false, message: 'Passwords do not match'})
-        }
+         if(password === password2){
+            if(password.match(PasswordRegex))
+                resolve(true);
+            }else reject({ success: false, message: 'Passwords contain spaces or are too long/too short(6-20 chars)'});
+            else reject({ success: false, message: 'Passwords do not match'});
     }
 
     checkExistingUsername(req: Request, res: Response, next: NextFunction){
@@ -69,7 +69,10 @@ export default class UserMiddleware {
             if (existingUser) {
                 return res.status(400).json({ success: false, message: 'Username already exists' });
             } else {
-                next()
+                if(existingUser.username.match(UsernameRegex))
+                    return resolve(true);
+                else
+                    return reject({ success: false, message: 'Username does not fit constraints'});
             }
         })
     }
