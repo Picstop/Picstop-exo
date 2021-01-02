@@ -4,20 +4,26 @@ import User from '../models/user';
 import initLogger from '../core/logger';
 
 const logger = initLogger('MiddlewareUser');
-
+const UsernameRegex=^([^\s]+[A-Z]|[a-z]|[0-9]|[_]|[.]){3,20}$;
+const PasswordRegex=^([^\s]){6,20}$;
 /*
 function validUser(req: Request, res: Response, next: NextFunction){
     Promise.allSettled([
         ()=>{
-            if(password === password2) resolve(true);
+            if(password === password2){
+            if(password.match(PasswordRegex))
+                resolve(true);
+            }else reject({ success: false, message: 'Passwords contain spaces or are too long/too short(6-20 chars)'});
             else reject({ success: false, message: 'Passwords do not match'});
         },
-        ()=>User.findOne({ req.body.username })//we could do 2 birds one stone with: https://stackoverflow.com/questions/7382207/mongooses-find-method-with-or-condition-does-not-work-properly
+        ()=>User.findOne({ req.body.username })
         .then((existingUser) => {
             if (existingUser) {
                 return reject({ success: false, message: 'Username already exists' });
             } else {
+                if(existingUser.username.match(UsernameRegex))
                 return resolve(true);
+                else return reject({ success: false, message: 'Username does not fit constraints'});
             }
         }).catch(err=>{
             logger.error(`Error finding existing user with username ${username} with error ${err}`)
