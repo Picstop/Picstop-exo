@@ -14,6 +14,7 @@ export default class UserMiddleware {
 
     function validUser(req: Request, res: Response, next: NextFunction){
         const {password, password2, username, email} = req.body;
+        if(password&&password2&&username&&email){
         Promise.allSettled([
             checkPasswordMatch(password, password2),
             checkExistingUsername(username),
@@ -23,6 +24,7 @@ export default class UserMiddleware {
             if(out===[]) return next();
             else return res.status(400).json(out);//would an array be valid json?
         });
+        }else return res.status(400).json({ success: false, message: 'Missing data field' });
     }
     
         const checkPasswordMatch = async (password:string, password2:string): Promise<any> => {
