@@ -54,11 +54,13 @@ export default class UserMiddleware {
 
     checkPasswordMatch(req: Request, res: Response, next: NextFunction){
         const { password, password2 } = req.body;
-         if(password === password2){
-            if(password.match(PasswordRegex))
-                resolve(true);
-            }else reject({ success: false, message: 'Passwords contain spaces or are too long/too short(6-20 chars)'});
-            else reject({ success: false, message: 'Passwords do not match'});
+        if(password === password2 && password.match(PasswordRegex)){
+                next()
+        } else if (!password.match(PasswordRegex)){
+            return res.status(400).json({ success: false, message: 'Passwords contain spaces or are too long/too short(6-20 chars)'});
+        } else if (password !== password2){
+            return res.status(400).json({ success: false, message: 'Passwords do not match' })
+        }
     }
 
     checkExistingUsername(req: Request, res: Response, next: NextFunction){
@@ -67,15 +69,15 @@ export default class UserMiddleware {
         User.findOne({ username }, (err, existingUser) => {
             if (err) {
                 logger.error(`Error finding existing user with username ${username} with error ${err}`)
-                res.status(400).json({ success: false, message: err });
+                return res.status(400).json({ success: false, message: err });
             }
             if (existingUser) {
                 return res.status(400).json({ success: false, message: 'Username already exists' });
             } else {
                 if(existingUser.username.match(UsernameRegex))
-                    return resolve(true);
+                    next();
                 else
-                    return reject({ success: false, message: 'Username does not fit constraints'});
+                    return res.status(400).json({ success: false, message: 'Username does not fit constraints' });
             }
         })
     }
@@ -91,9 +93,13 @@ export default class UserMiddleware {
             if (existingUser){
                 res.status(200).json({ success: false, message: 'Email already exists' });
             } else {
-                if (existingUser.username.match(EmailRegex))
-                return resolve(true);
-                else return reject({ success: false, message: 'Email is invalid'});
+                if (existingUser.username.match(EmailRegex)) { 
+                    next()
+                } else {
+                    return res.status(400).json({ success: false, message: 'Email is invalid'});
+                }
+                
+                
             }
         })
     }
