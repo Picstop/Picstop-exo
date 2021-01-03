@@ -29,8 +29,9 @@ export default class UserMiddleware {
             if(password === password2){
             if(password.match(PasswordRegex))
                 resolve(true);
-            }else reject({ success: false, message: 'Passwords contain spaces or are too long/too short(6-20 chars)'});
-            else reject({ success: false, message: 'Passwords do not match'});
+            else 
+                reject({ success: false, message: 'Passwords contain spaces or are too long/too short(6-20 chars)'});
+            } else reject({ success: false, message: 'Passwords do not match'});
         };
     
     const checkExistingUsername = async (username:string): Promise<any> =>
