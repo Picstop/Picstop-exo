@@ -14,8 +14,10 @@ import initLogger from './core/logger';
 import locationRoutes from './routes/locations';
 import morgan from 'morgan';
 import passport from 'passport';
-import session from 'express-session'
-import userRoutes from './routes/users'
+import session from 'express-session';
+import userRoutes from './routes/users';
+import postRoutes from './routes/posts';
+import helmet from 'helmet';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ const client = new Redis({
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(helmet());
 
 const logger = initLogger('index');
 
@@ -66,6 +70,7 @@ app.get('/', (req, res) => {
 });
 app.use('/locations', locationRoutes);
 app.use('/user', userRoutes);
+app.use('/post', postRoutes);
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
 }).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
