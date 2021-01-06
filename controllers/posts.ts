@@ -4,50 +4,131 @@ import * as mongoose from 'mongoose';
 import { NextFunction, Request, Response } from 'express';
 
 import { loggers } from 'winston';
+import * as AWS from 'aws-sdk';
 import Post from '../models/post';
 import { Post as PostType } from '../types/types';
 import initLogger from '../core/logger';
 
 const logger = initLogger('ControllerPosts');
 
+const credentials = {
+    accessKeyId: process.env.AWS_ACCESS,
+    secretAccessKey: process.env.AWS_SECRET,
+};
+AWS.config.update({ credentials, region: 'us-east-1' });
+const s3Bucket = process.env.BUCKET_NAME;
+const s3 = new AWS.S3();
 export default class PostController {
-    createPost(req: Request, res: Response, next: NextFunction) {
-        const { authorId, caption, location } = req.body;
-        let post;
-        if (!caption) {
-            post = new Post({
-                authorId,
-                location,
-            });
-        } else {
-            post = new Post({
-                authorId,
-                location,
-                caption,
-            });
-        }
+    async getUpload(files: number, authId: string, postId: string) {
+        return new Promise((resolve, reject) => {
+            const nl = [...Array(files).keys()];
+            const orderPromises = nl.map((i) => s3.getSignedUrl('putObject', {
+                Bucket: s3Bucket,
+                Key: `${authId}/${postId}/${i}.webp`,
+                Expires: 60,
+                ContentType: 'image/webp',
+                ACL: 'public-read',
+            }));
+            Promise.all(orderPromises)
+                .then((urls) => resolve(urls))
+                .catch((err) => reject(err));
+        });
+    }
 
-        return post.save()
-            .then((result: any) => res.status(201).json({ success: true, message: result }))
+    createPost(req: Request, res: Response) {
+        const {
+            authorId, caption, location, files,
+        } = req.body;
+        let post={
+            authorId,
+            location,
+        };
+        if (caption) post['caption']=caption;
+
+        return Post.create(post)
+            .then((result: any) => this.getUpload(files, authorId, result.id)
+                .then((url: Array<string>) => res.status(201).json({
+                    success: true,
+                    message: {
+                        post: result,
+                        urls: url,
+                    },
+                }))
+                .catch((err: any) => {
+                    logger.error(`Error when saving a post ${post}: ${err}`);
+                    return res.status(500).json({ success: false, message: err.message });
+                }))
             .catch((err: any) => {
                 logger.error(`Error when saving a post ${post}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
 
-    getPost(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.query;
-        Post.findById(id).exec()
-            .then((result) => res.status(200).json({ success: true, message: result }))
+    async getDownload(post: any) {
+        return new Promise((resolve, reject) => {
+            const params = {
+                Bucket: s3Bucket,
+                Prefix: `${post.authorId}/${post.id}`,
+            };
+            s3.listObjectsV2(params, async (err, data) => {
+                if (err) return reject(err);
+
+                const nl = [...Array(data.Contents.length).keys()];
+
+                const orderPromises = nl.map((i) => s3.getSignedUrl('getObject', {
+                    Bucket: s3Bucket,
+                    Key: `${post.authorId}/${post.id}/${i}.webp`,
+                    Expires: 60,
+                }));
+                return Promise.all(orderPromises)
+                    .then((urls) => resolve(urls))
+                    .catch((err1) => reject(err1));
+            });
+        });
+    }
+
+    getPost(req: Request, res: Response) {
+        const { id } = req.params;
+        Post.findById(id)
+            .then((result) => {
+                this.getDownload(result)
+                    .then((urls) => res.status(200).json({
+                        success: true,
+                        message: {
+                            post: result,
+                            url: urls,
+                        },
+                    }))
+                    .catch((err) => {
+                        logger.error(`Error when getting a post ${id}'s images: ${err}`);
+                        return res.status(500).json({ success: false, message: err });
+                    })
+            })
             .catch((err) => {
                 logger.error(`Error when getting a post by id ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err });
             });
     }
 
-    getUserPosts(req: Request, res: Response, next: NextFunction) {
+    getUserPosts(req: Request, res: Response) {
         const { userId } = req.body;
         Post.find({ authorId: userId }).exec()
+        // .then(async (result) => {
+            //     const orderPromises = result.map((i) => this.getDownload(i));
+            //     return Promise.all(orderPromises)
+            //         .then((urls) => res.status(200).json({
+            //             success: true,
+            //             message: {
+            //                 posts: result,
+            //                 count: result.length,
+            //                 url: urls,
+            //             },
+            //         }))
+            //         .catch((err) => {
+            //             logger.error(`Error when finding posts with userId ${userId}: ${err}`);
+            //             return res.status(500).json({ success: false, message: err });
+            //         });
+            // })
             .then((result) => res.status(200).json({
                 success: true,
                 message: {
@@ -61,7 +142,7 @@ export default class PostController {
             });
     }
 
-    deletePost(req: Request, res: Response, next: NextFunction) {
+    deletePost(req: Request, res: Response) {
         const { postId } = req.query;
 
         Post.findByIdAndDelete(postId).exec()
@@ -72,15 +153,15 @@ export default class PostController {
             });
     }
 
-    async updatePostCaption(req: Request, res: Response, next: NextFunction) {
-        const authorId = Post.find({ authorId: req.user.id });
+    async updatePostCaption(req: Request, res: Response) {
+        const authorId = Post.find({ authorId: req.user['id'] });
         const { caption, postId } = req.body;
-        if (authorId !== req.user.id) {
+        if (authorId !== req.user['id']) {
             // TODO: raise and try/catch a custom error here
             logger.info('Error when updating post caption: User is not an author of post');
             return res.status(401).json({ success: false, message: 'User is not author of post.' });
         }
-        Post.findByIdAndUpdate({ _id: postId }, { caption }).exec()
+        return Post.findByIdAndUpdate({ _id: postId }, { caption }).exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error when updating post ${postId}: ${err}`);
