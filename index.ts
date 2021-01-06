@@ -1,16 +1,13 @@
 import * as dotenv from 'dotenv';
-import * as userController from './controllers/user';
-
-import { Strategy as LocalStrategy } from 'passport-local';
-import Location from './models/location';
-import bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
-import db from './database/database';
-import express from 'express';
-import initLogger from './core/logger';
-import locationRoutes from './routes/locations';
 import morgan from 'morgan';
 import passport from 'passport';
+import express from 'express';
+import bodyParser from 'body-parser';
+
+import * as userController from './controllers/user';
+import db from './database/database';
+import initLogger from './core/logger';
+import locationRoutes from './routes/locations';
 
 dotenv.config();
 const app = express();
