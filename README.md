@@ -15,16 +15,16 @@ Setup Redis with homebrew:
 
 .env vars:
 
-MONGO_URL=
-AWS_SECRET=
-BUCKET_NAME=
-REDIS_PORT=
-REDIS_HOST=
-REDIS_PASSWORD=
-REDIS_SECRET=
-REDIS_NAME= 
-REDIS_AGE=
-NODE_ENV= development || production
+	MONGO_URL=
+	AWS_SECRET=
+	BUCKET_NAME=
+	REDIS_PORT=
+	REDIS_HOST=
+	REDIS_PASSWORD=
+	REDIS_SECRET=
+	REDIS_NAME= 
+	REDIS_AGE=
+	NODE_ENV= development || production
 
 
 	
