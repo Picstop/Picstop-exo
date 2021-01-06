@@ -16,7 +16,7 @@ start server:
 		
 start redis server upon computer boot:
 
-		ln -sfv /usr/local/opt/redis/*.plist ~/Library/LaunchAgents
+	ln -sfv /usr/local/opt/redis/*.plist ~/Library/LaunchAgents
 
 .env vars:
 
