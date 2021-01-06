@@ -1,10 +1,9 @@
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
-  verbose: true,
-  testPathIgnorePatterns: [
-    "/node_modules/"
-  ],
+    preset: '@shelf/jest-mongodb',
+    collectCoverage: true,
+    coverageDirectory: 'coverage',
+    verbose: true,
+    testPathIgnorePatterns: [
+        '/node_modules/',
+    ],
 };

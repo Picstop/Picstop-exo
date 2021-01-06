@@ -1,11 +1,13 @@
 {
     "env": {
         "browser": true,
-        "es2021": true
+        "es2021": true,
+        "jest/globals": true
     },
     "extends": [
         "airbnb-base",
-        "plugin:import/typescript"
+        "plugin:import/typescript",
+        "plugin:jest/all"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -14,7 +16,8 @@
         "project": "./tsconfig.json"
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "jest"
     ],
     "rules": {
         "indent": ["error", 4],
@@ -30,7 +33,16 @@
             {
                 "ts": "never"
             }
-        ]
+        ],
+        "no-underscore-dangle": "warn",
+        "linebreak-style": "off",
+        "no-unused-vars": "warn"
+    },
+    "settings": {
+        "import/resolver": {
+          "node": {
+            "paths": ["."]
+          }
+        }
     }
-   
 }
