@@ -6,11 +6,16 @@ To start server:
 
 Setup Redis with homebrew:
 	
-	install:
-		brew install redis
-	start server:
-		brew services start redis
-	start redis server upon computer boot:
+install:
+
+	brew install redis
+	
+start server:
+
+	brew services start redis
+		
+start redis server upon computer boot:
+
 		ln -sfv /usr/local/opt/redis/*.plist ~/Library/LaunchAgents
 
 .env vars:
