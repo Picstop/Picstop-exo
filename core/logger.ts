@@ -6,7 +6,7 @@ import path from 'path';
  * @param {string} uid The unique id for the logger.
  * @return {winston.Logger} The logger object.
  */
-function initLogger(uid: string): Logger {
+function initLogger(uid: string, fileName: string = 'default'): Logger {
     const logger = winston.createLogger({
         level: process.env.LOG_LEVEL || 'info',
         format: winston.format.combine(
@@ -21,7 +21,7 @@ function initLogger(uid: string): Logger {
 
     logger.add(
         new winston.transports.File({
-            filename: process.env.LOG_FILE_PATH || `${path.dirname(require.main.filename)}/logs/default.log`,
+            filename: process.env.LOG_FILE_PATH || `${path.dirname(require.main.filename)}/logs/${fileName}.log`,
         }),
     );
 
