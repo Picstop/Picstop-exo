@@ -6,26 +6,24 @@ const PostSchema = new Schema({
     authorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        ref: 'User'
     },
     caption: {
         type: String,
     },
-    image: {
-        type: String,
-        required: true,
-    },
     location: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        ref: 'Location'
     },
-    likes: {
-        type: Array,
-        default: [],
-    },
-    comments: {
-        type: Array,
-        default: [],
-    },
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    }],
+    comments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+    }],
 },
 {
     timestamps: true,

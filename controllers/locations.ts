@@ -1,10 +1,9 @@
-import {
-    Dimension,
-    Location as LocationType,
-} from '../types/types';
 import { Request, Response } from 'express';
 
 import Location from '../models/location';
+import {
+Location as LocationType,
+} from '../types/types';
 import _ from 'lodash';
 
 /* eslint-disable no-underscore-dangle */

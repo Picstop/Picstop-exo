@@ -13,6 +13,10 @@ export type IUser = Document & {
   password: string;
   followers: Array<mongoose.Schema.Types.ObjectId>;
   following: Array<mongoose.Schema.Types.ObjectId>;
+  followerRequests: Array<mongoose.Schema.Types.ObjectId>;
+  private: boolean;
+  blocked: Array<mongoose.Schema.Types.ObjectId>;
+  bio: string;
 
   comparePassword: comparePasswordFunction;
 };
@@ -39,9 +43,3 @@ export type Location = Document & {
   isOfficial: boolean;
 };
 
-export type Dimension = {
-  minLat: number;
-  minLong: number;
-  maxLat: number;
-  maxLong: number;
-};
