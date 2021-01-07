@@ -1,3 +1,5 @@
+import './config/passport'
+
 import * as dotenv from 'dotenv';
 import morgan from 'morgan';
 import passport from 'passport';
@@ -10,10 +12,39 @@ import initLogger from './core/logger';
 import locationRoutes from './routes/locations';
 
 dotenv.config();
+
+const RedisStore = connectRedis(session)
+const client = new Redis({
+    port: Number(process.env.REDIS_PORT),
+    host: process.env.REDIS_HOST,
+    password: process.env.REDIS_PASSWORD
+})
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 const logger = initLogger('index');
+
+client.on('connect', () =>{
+    logger.info('Connected to Redis')
+})
+
+app.use(session({
+    store: new RedisStore({
+        client,
+        name: process.env.REDIS_NAME,
+        cookie: {
+            maxAge: Number(process.env.REDIS_AGE),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: true
+
+        },
+    }),
+    saveUninitialized: false,
+    secret: process.env.REDIS_SECRET,
+    resave: false,
+
+}))
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -23,27 +54,14 @@ app.use(morgan('dev')); // TODO: add support for different environments
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/signup', userController.postSignup);
-app.post('/login', userController.postLogin);
-app.post('/logout', userController.logout);
-
 app.get('/', (req, res) => {
     logger.debug('Base endpoint works.');
     res.send('Hello world!');
 });
-
 app.use('/locations', locationRoutes);
-
+app.use('/user', userRoutes);
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
-
-    /* const location = await Location.find({}).exec();
-    const quadrant = await Quadrant.findById('1').exec();
-    location.forEach((e) => {
-        quadrant!.locations.push(e._id);
-    });
-    await quadrant!.save();
-    console.log('Saved'); */
 }).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
 
 app.listen(port, () => {
