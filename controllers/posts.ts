@@ -39,11 +39,11 @@ export default class PostController {
         const {
             authorId, caption, location, files,
         } = req.body;
-        let post={
+        let post = {
             authorId,
             location,
         };
-        if (caption) post['caption']=caption;
+        if (caption) post['caption'] = caption;
 
         return Post.create(post)
             .then((result: any) => this.getUpload(files, authorId, result.id)
@@ -113,29 +113,22 @@ export default class PostController {
     getUserPosts(req: Request, res: Response) {
         const { userId } = req.body;
         Post.find({ authorId: userId }).exec()
-        // .then(async (result) => {
-            //     const orderPromises = result.map((i) => this.getDownload(i));
-            //     return Promise.all(orderPromises)
-            //         .then((urls) => res.status(200).json({
-            //             success: true,
-            //             message: {
-            //                 posts: result,
-            //                 count: result.length,
-            //                 url: urls,
-            //             },
-            //         }))
-            //         .catch((err) => {
-            //             logger.error(`Error when finding posts with userId ${userId}: ${err}`);
-            //             return res.status(500).json({ success: false, message: err });
-            //         });
-            // })
-            .then((result) => res.status(200).json({
-                success: true,
-                message: {
-                    posts: result,
-                    count: result.length,
-                },
-            }))
+            .then(async (result) => {
+                const orderPromises = result.map((i) => this.getDownload(i));
+                return Promise.all(orderPromises)
+                    .then((urls) => res.status(200).json({
+                        success: true,
+                        message: {
+                            posts: result,
+                            count: result.length,
+                            url: urls,
+                        },
+                    }))
+                    .catch((err) => {
+                        logger.error(`Error when finding posts with userId ${userId}: ${err}`);
+                        return res.status(500).json({ success: false, message: err });
+                    });
+            })
             .catch((err) => {
                 logger.error(`Error when finding posts with userId ${userId}: ${err}`);
                 return res.status(500).json({ success: false, message: err });
