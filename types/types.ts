@@ -43,3 +43,18 @@ export type Location = Document & {
   isOfficial: boolean;
 };
 
+export type UserReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+}
+
+export type CommentReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+}
+
+export type PostReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+}
+
