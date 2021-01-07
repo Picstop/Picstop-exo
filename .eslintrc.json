@@ -36,8 +36,7 @@
         ],
         "no-underscore-dangle": "warn",
         "linebreak-style": "off",
-        "no-unused-vars": "warn",
-        ""
+        "no-unused-vars": "warn"
     },
     "settings": {
         "import/resolver": {
