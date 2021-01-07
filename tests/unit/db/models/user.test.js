@@ -1,26 +1,25 @@
 import mongoose, { mongo } from 'mongoose';
-import UserModel from 'models/user';
 import bcrypt from 'bcrypt';
 
-import initLogger from 'core/logger';
+import UserModel from '~/models/user';
+import initLogger from '~/core/logger';
 
 const logger = initLogger('TestUser', 'test-mongo');
-
-function setUpMongo() {
-    await mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useCreateIndex: true }, (err) => {
-        if (err) {
-            logger.error(`Error while setting up MongoDB: ${err}`);
-            process.exit(1);
-        }
-    });
-}
 
 // TODO: seems like there is no need for mongoose.disconnect() (tearDown) anymore?
 
 describe('user model test', () => {
+    beforeAll(async () => {
+        await mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useCreateIndex: true }, (err) => {
+            if (err) {
+                logger.error(`Error while setting up MongoDB: ${err}`);
+                process.exit(1);
+            }
+        });
+    });
+
     it('successfully creates & saves a user', async () => {
         expect.assertions(5);
-        setUpMongo();
 
         const validUser = {
             email: 'albus@dumbledore.me',
@@ -40,10 +39,9 @@ describe('user model test', () => {
         });
     });
 
-    it('mongoose schema invalid fields test', () => {
+    it('mongoose schema invalid fields test', async () => {
         // This should work if mongoose doesn't let add additional fields
         expect.assertions(2);
-        setUpMongo();
 
         const invalidUser = {
             email: 'albus@dumbledore.me',
@@ -59,10 +57,9 @@ describe('user model test', () => {
         expect(savedUser.invalid).toBeUndefined();
     });
 
-    it('mongoose validation invalid types test', () => {
+    it('mongoose validation invalid types test', async () => {
         // This should work if mongoose doesn't let define values of incorrect types
         expect.assertions(1);
-        setUpMongo();
 
         const invalidUser = {
             email: 'albus@dumbledore.me',
@@ -82,10 +79,9 @@ describe('user model test', () => {
         expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
     });
 
-    it('mongoose validation missing required fields test', () => {
+    it('mongoose validation missing required fields test', async () => {
         // This should work if mongoose doesn't save an object with missing required fields
         expect.assertions(1);
-        setUpMongo();
 
         const invalidUser = {
             email: 'albus@dumbledore.me',
