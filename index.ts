@@ -7,13 +7,16 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import Redis from 'ioredis';
 import connectRedis from 'connect-redis';
-
 import session from 'express-session';
+
 import db from './database/database';
 import initLogger from './core/logger';
-import locationRoutes from './routes/locations';
 
+import locationRoutes from './routes/locations';
 import userRoutes from './routes/users';
+import commentRoutes from './routes/comments';
+import postRoutes from './routes/posts';
+import reportRoutes from './routes/reports';
 
 dotenv.config();
 
@@ -33,22 +36,22 @@ client.on('connect', () => {
     logger.info('Connected to Redis');
 });
 
-app.use(session({
-    store: new RedisStore({
-        client,
-        name: process.env.REDIS_NAME,
-        cookie: {
-            maxAge: Number(process.env.REDIS_AGE),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: true,
-
-        },
-    }),
-    saveUninitialized: false,
-    secret: process.env.REDIS_SECRET,
-    resave: false,
-
-}));
+app.use(
+    session({
+        store: new RedisStore({
+            client,
+            name: process.env.REDIS_NAME,
+            cookie: {
+                maxAge: Number(process.env.REDIS_AGE),
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: true,
+            },
+        }),
+        saveUninitialized: false,
+        secret: process.env.REDIS_SECRET,
+        resave: false,
+    })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -64,6 +67,9 @@ app.get('/', (req, res) => {
 });
 app.use('/locations', locationRoutes);
 app.use('/user', userRoutes);
+app.use('/comments', commentRoutes);
+app.use('/posts', postRoutes);
+app.use('/report', reportRoutes);
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
 }).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
