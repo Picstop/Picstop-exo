@@ -19,18 +19,21 @@ import userRoutes from './routes/users'
 import commentRoutes from './routes/comments'
 import postRoutes from './routes/posts'
 import reportRoutes from './routes/reports'
+import helmet from 'helmet';
 
 dotenv.config();
 
-const RedisStore = connectRedis(session)
+const RedisStore = connectRedis(session);
 const client = new Redis({
     port: Number(process.env.REDIS_PORT),
     host: process.env.REDIS_HOST,
     password: process.env.REDIS_PASSWORD
-})
+});
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(helmet());
 
 const logger = initLogger('index');
 
@@ -72,6 +75,7 @@ app.use('/user', userRoutes);
 app.use('/comments', commentRoutes);
 app.use('/posts', postRoutes);
 app.use('/report', reportRoutes);
+
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
 }).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));

@@ -53,6 +53,7 @@ export default class CommentController {
     async deleteComment(req: Request, res: Response, next: NextFunction) {
         const { id } = req.query;
         const commentAuthor = await Comment.findById(id).exec();
+
         if (commentAuthor !== req.user['_id']) {
             // TODO: add a custom error and a try/catch
             logger.error(`Error when deleting a comment ${id}: User is not author of post`);

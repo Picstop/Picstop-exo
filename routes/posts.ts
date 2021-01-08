@@ -5,14 +5,16 @@ import PostMiddleware from '../middleware/posts';
 const router = express.Router();
 const Posts = new PostController();
 
-router.post('/', async (req, res, next) => Posts.createPost(req, res, next));
+router.post('/createPost/', async (req, res) => Posts.createPost(req, res));
 
-router.get('/:id', async (req, res, next) => Posts.getPost(req, res, next));
+router.get('/getPost/:id', async (req, res) => Posts.getPost(req, res));
 
-router.delete('/:id', PostMiddleware.verifyAuthor, async (req, res, next) => Posts.deletePost(req, res, next));
+router.delete('/deletePost/:id', PostMiddleware.verifyAuthor, async (req, res, next) => Posts.deletePost(req, res, next));
 
-router.get('/user', async (req, res, next) => Posts.getUserPosts(req, res, next));
 
-router.patch('/:id', PostMiddleware.verifyAuthor, async (req, res, next) => Posts.updatePostCaption(req, res, next));
+router.get('/getUserPosts/', async (req, res) => Posts.getUserPosts(req, res));
+
+
+router.patch('/updatePostCaption/:id', PostMiddleware.verifyAuthor, async (req, res, next) => Posts.updatePostCaption(req, res, next));
 
 export default router;
