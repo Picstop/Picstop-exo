@@ -22,8 +22,8 @@ export default class UserMiddleware {
     }
 
     async allowedToViewProfile(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.params;
-        const user = await User.findById(id).exec();
+        const { username } = req.params;
+        const user = await User.findOne({ username }).exec();
         const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
         const incomingBlocks = await user.blocked.some((user) => `${user}` == (req.user._id));
         const outgoingBlocks = await req.user.blocked.some((users) => `${users}` == user._id);
