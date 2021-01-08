@@ -18,13 +18,16 @@ export default class ReportMiddleware {
     async checkIfCommentAuthor(req: Request, res: Response, next: NextFunction) {
         const { comment } = req.body;
         const reportedBy = req.user._id;
-        Comment.findById(comment).exec()
+        Comment.findById(comment)
+            .orFail(new Error('Comment not found!'))
+            .exec()
             .then((comm) => {
-                if (`${comm.authorId}` == reportedBy) {
+                if (`${comm.authorId}` === reportedBy) {
                     return res.status(400).json({ success: false, message: 'Cannot report your own comment' });
                 }
-                next();
-            }).catch((err) => {
+                return next();
+            })
+            .catch((err) => {
                 logger.error(`Error getting comment ${comment} with error ${err}`);
                 return res.status(500).json({ success: false, message: err });
             });
@@ -33,25 +36,28 @@ export default class ReportMiddleware {
     async checkIfUserReportedComment(req: Request, res: Response, next: NextFunction) {
         const { comment } = req.body;
         const reportedBy = req.user._id;
-        const reports = await commentReport.find({ comment, reportedBy }).exec();
+        const reports = await commentReport.find({ comment, reportedBy })
+            .orFail(new Error('Report not found!'))
+            .exec();
 
-        if (reports.length < 1) {
-            next();
-        } else {
-            return res.status(400).json({ success: false, message: 'User already reported comment.' });
-        }
+        if (reports.length < 1) { return next(); }
+
+        return res.status(400).json({ success: false, message: 'User already reported comment.' });
     }
 
     async checkIfPostAuthor(req: Request, res: Response, next: NextFunction) {
         const { post } = req.body;
         const reportedBy = req.user._id;
-        Post.findById(post).exec()
+        Post.findById(post)
+            .orFail(new Error('Post not found!'))
+            .exec()
             .then((posts) => {
-                if (`${posts.authorId}` == reportedBy) {
+                if (`${posts.authorId}` === reportedBy) {
                     return res.status(400).json({ success: false, message: 'Cannot report your own post' });
                 }
-                next();
-            }).catch((err) => {
+                return next();
+            })
+            .catch((err) => {
                 logger.error(`Error getting post ${post} with error ${err}`);
                 return res.status(500).json({ success: false, message: err });
             });
@@ -60,42 +66,41 @@ export default class ReportMiddleware {
     async checkIfUserReportedPost(req: Request, res: Response, next: NextFunction) {
         const { post } = req.body;
         const reportedBy = req.user._id;
-        const reports = await postReport.find({ post, reportedBy }).exec();
+        const reports = await postReport.find({ post, reportedBy })
+            .orFail(new Error('Report not found!'))
+            .exec();
 
         if (reports.length < 1) {
-            next();
-        } else {
-            return res.status(400).json({ success: false, message: 'User already reported Post.' });
+            return next();
         }
+        return res.status(400).json({ success: false, message: 'User already reported Post.' });
     }
 
     async notThemself(req: Request, res: Response, next: NextFunction) {
-        const { user } = req.body;
-        if (req.user._id == user) return res.status(400).json({ success: false, message: 'Cannot report yourself' });
-        next();
+        const { user } = req.body.reportedBy;
+        if (req.user._id === user) return res.status(400).json({ success: false, message: 'Cannot report yourself' });
+        return next();
     }
 
     async checkIfUserReportedUser(req: Request, res: Response, next: NextFunction) {
         const { user } = req.body;
         const reportedBy = req.user._id;
-        const reports = await userReport.find({ user, reportedBy }).exec();
+        const reports = await userReport.find({ user, reportedBy })
+            .orFail(new Error('Report not found!'))
+            .exec();
 
-        if (reports.length < 1) {
-            next();
-        } else {
-            return res.status(400).json({ success: false, message: 'User already reported user.' });
-        }
+        if (reports.length < 1) { return next(); }
+        return res.status(400).json({ success: false, message: 'User already reported user.' });
     }
 
     async checkIfUserReportedLocation(req: Request, res: Response, next: NextFunction) {
         const { location } = req.body;
         const reportedBy = req.user._id;
-        const reports = await locationReport.find({ location, reportedBy }).exec();
+        const reports = await locationReport.find({ location, reportedBy })
+            .orFail(new Error('Report not found!'))
+            .exec();
 
-        if (reports.length < 1) {
-            next();
-        } else {
-            return res.status(400).json({ success: false, message: 'User already reported location.' });
-        }
+        if (reports.length < 1) return next();
+        return res.status(400).json({ success: false, message: 'User already reported location.' });
     }
 }
