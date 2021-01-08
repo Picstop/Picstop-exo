@@ -20,8 +20,10 @@
   "dependencies": {
     "@types/mongodb": "^3.6.3",
     "async": "^3.2.0",
+    "aws-sdk": "^2.824.0",
     "bcrypt": "^5.0.0",
     "connect-redis": "^5.0.0",
+    "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
     "eslint-import-resolver-typescript": "^2.3.0",
     "express": "^4.17.1",

@@ -5,10 +5,17 @@ import passport from 'passport';
 import { IUser } from '../types/types';
 import User from '../models/user';
 import initLogger from '../core/logger';
-import { MongoError } from 'mongodb';
+import async from 'async'; 
+import crypto from 'crypto';
+import aws from 'aws-sdk'
+import bcrypt from 'bcrypt'
 
 const logger = initLogger('ControllerUser');
-
+const SES = new aws.SES({
+	region: 'us-east-1',
+	accessKeyId: process.env.AWS_ACCESS,
+	secretAccessKey: process.env.AWS_SECRET,
+});
 export default class UserController {
     async postSignup (req: Request, res: Response){
         const user = new User({
@@ -222,7 +229,124 @@ export default class UserController {
             return res.status(500).json({ success: false, message: error})
         })
     }
-    
 
+    async postResetPassword(req: Request, res: Response){
+        async.waterfall([
+            function(done) {
+              User.findOne({
+                email: req.body.email
+              }).exec(function(err, user) {
+                if (user) {
+                  done(err, user);
+                } else {
+                  done('User not found.');
+                }
+              });
+            },
+            function(user, done) {
+              // create the random token
+              crypto.randomBytes(20, function(err, buffer) {
+                var token = buffer.toString('hex');
+                done(err, user, token);
+              });
+            },
+            function(user, token, done) {
+              User.findByIdAndUpdate({ _id: user._id }, { resetPasswordToken: token, resetPasswordExpires: Date.now() + 86400000 }, { new: true }).exec(function(err, new_user) {
+                done(err, token, new_user);
+              });
+            },
+            function(token, user, done) {
+  
+                SES.sendEmail({
+                    Destination: {
+                        ToAddresses: [user.email],
+                    },
+                    Message: {
+                        Body: {
+                            Html: {
+                                Charset: 'UTF-8',
+                                Data: `You are receiving this because you (or someone else) have requested the reset of the password for your account.<br/><br/>Please click on the following link, or paste this into your browser to reset your password:<br/><br/> https://${req.headers.host}/user/reset/${token}<br/><br/>If you did not request this, please ignore this email and your password will remain unchanged.<br/>`,
+                            }
+                        },
+                        Subject: {
+                            Charset: 'UTF-8',
+                            Data: 'Password Reset',
+                        }
+                    },
+                    Source: `Picstop <${process.env.LOGIN_USER}>`,
+                }).promise()
+                .then(() => {
+                    return res.status(200).json({ success: true, message: 'Sent password reset email'} )
+                }).catch((err) => {
+                    return done(err)
+                })
+            }
+          ], function(err) {
+            return res.status(500).json({ success: false, message: err });
+          });
+    }
+
+    async checkToken(req: Request, res: Response){
+        User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }).exec()
+        .then(() => {
+            return res.status(200).json({ success: true, message: 'Valid reset token', token: req.params.token });
+        }).catch(() =>{
+            return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.'});
+        })
+    }
+
+    async postPasswordReset(req: Request, res: Response){
+    
+        async.waterfall([
+            function(done) {
+                User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, async function(err, user) {
+                    if (!user) {
+                        return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.'});
+                    }
+
+                    
+                    user.password = req.body.password;
+                    user.resetPasswordToken = undefined;
+                    user.resetPasswordExpires = undefined;
+      
+                    await user.save(function(err) {
+                        done(err, user);
+                    });
+            
+                    
+                });
+            },
+            function(user, done) {
+                SES.sendEmail({
+                    Destination: {
+                        ToAddresses: [user.email],
+                    },
+                    Message: {
+                        Body: {
+                            Html: {
+                                Charset: 'UTF-8',
+                                Data: 'You are receiving this because you (or someone else) have successfully reset your password.<br/>',
+                            }
+                        },
+                        Subject: {
+                            Charset: 'UTF-8',
+                            Data: 'Password Successfully Reset',
+                        }
+                    },
+                    Source: `Picstop <${process.env.LOGIN_USER}>`,
+                }).promise();
+                done();
+            }
+        ], function(err) {
+            if(err){
+                if (err.name.includes('ValidationError')) return res.status(400).json({ success: false, message: err.message })
+                logger.error(`Error resetting password with error ${err} `)
+                return res.status(500).json({ success: false, message: err })
+            }
+            return res.status(200).json({ success: true, message: 'Password successfully reset' });
+        });
+    }
+    
+    
 }
 
