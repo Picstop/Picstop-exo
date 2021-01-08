@@ -14,7 +14,8 @@ export default class PostMiddleware {
      * @param {express.NextFunction} next The next function to call if this one passes
      */
     async verifyAuthor(req: Request, res: Response, next: NextFunction) {
-        const { authorId, id } = req.body;
+        const { id } = req.body;
+        const currUserId = req.user['_id'];
 
         // Verify first that this post exists in the database
         // TODO: #8 add this logging to the controller and use the controller method here instead
@@ -33,7 +34,7 @@ export default class PostMiddleware {
         }
 
         // Note: use .equals instead of ==
-        if (post.authorId.equals(authorId)) {
+        if (post.authorId.equals(currUserId)) {
             next();
         } else {
             return res
