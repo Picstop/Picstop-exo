@@ -71,39 +71,6 @@ export default class UserController {
 
 
 
-    /* async followUser(req: Request, res: Response){
-        const id = req.body.id 
-        const isPrivate = this.isPrivate(id)
-        if(isPrivate == null){
-            logger.error(`Error getting user ${id} 's privacy setting`)
-            return res.status(500).json({ success: false, message: 'Error getting user\'s privacy setting' })
-        } else if (isPrivate){
-            User.findByIdAndUpdate(id, { $push: {followerRequests: req.user['_id']} }).exec()
-            .then((result) =>{
-                console.log(result)
-                return res.status(200).json({ success: true, message: 'Successfully requested to follow user'});
-            })
-            .catch((err: Error) => {
-                logger.error(`Error sending follow request to ${id} by ${req.user['_id']} with error ${err}`)
-                return res.status(500).json({ success: false, message: err})
-            })
-        } else if(!isPrivate){
-            User.findByIdAndUpdate(id, {$push: {followers: req.user['_id']} }).exec()
-            .then(() =>{
-                User.findByIdAndUpdate(req.user['_id'], {$push: {following: id }}).exec()
-                .then(() =>{
-                    return res.status(200).json({ success: true, message: 'Successfully followed user' })
-                }).catch((error: Error) =>{
-                    logger.error(`Error adding user ${id} to ${req.user['_id']} 's following list`);
-                    return res.status(500).json({ success: false, message: error})
-                })
-            }).catch((err: Error) =>{
-                logger.error(`Error adding user ${req.user['_id']} to ${id} 's follower list.`)
-                return res.status(500).json({ success: false, message: err})
-            })
-        }
-    } */
-
     async followUser(req: Request, res: Response){
         const id = req.body.id 
         try {

@@ -14,9 +14,11 @@ import initLogger from './core/logger';
 import locationRoutes from './routes/locations';
 import morgan from 'morgan';
 import passport from 'passport';
-import session from 'express-session';
-import userRoutes from './routes/users';
-import postRoutes from './routes/posts';
+import session from 'express-session'
+import userRoutes from './routes/users'
+import commentRoutes from './routes/comments'
+import postRoutes from './routes/posts'
+import reportRoutes from './routes/reports'
 import helmet from 'helmet';
 
 dotenv.config();
@@ -70,7 +72,10 @@ app.get('/', (req, res) => {
 });
 app.use('/locations', locationRoutes);
 app.use('/user', userRoutes);
-app.use('/post', postRoutes);
+app.use('/comments', commentRoutes);
+app.use('/posts', postRoutes);
+app.use('/report', reportRoutes);
+
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
 }).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));

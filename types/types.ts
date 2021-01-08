@@ -34,6 +34,7 @@ export type Comment = Document & {
   postId: mongoose.Schema.Types.ObjectId;
   comment: string;
   likes: Array<mongoose.Schema.Types.ObjectId>;
+  authorId: mongoose.Schema.Types.ObjectId;
 };
 
 export type Location = Document & {
@@ -42,4 +43,28 @@ export type Location = Document & {
   author: string;
   isOfficial: boolean;
 };
+
+export type UserReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+  user: mongoose.Schema.Types.ObjectId;
+}
+
+export type CommentReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+  comment: mongoose.Schema.Types.ObjectId;
+}
+
+export type PostReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+  post: mongoose.Schema.Types.ObjectId;
+}
+
+export type LocationReport = Document & {
+  reason: string;
+  reportedBy: mongoose.Schema.Types.ObjectId;
+  location: mongoose.Schema.Types.ObjectId;
+}
 
