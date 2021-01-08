@@ -5,7 +5,7 @@ import { IUser } from "../types/types"
 
 import { Request, Response, NextFunction } from "express";
 
-passport.serializeUser<any, any>((user, done) => {
+passport.serializeUser((user: IUser, done) => {
     done(undefined, user.id);
 });
 
