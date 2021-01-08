@@ -1,88 +1,45 @@
-/* eslint-disable class-methods-use-this */
+import mongoose from 'mongoose';
 import { NextFunction, Response } from 'express';
-
+import { NewRequest as Request } from '../types/types';
 import Comment from '../models/comment';
-import { Comment as CommentType, NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 
-const logger = initLogger('ControllerComments');
+const logger = initLogger('MiddlewareComments');
 
-export default class CommentController {
-    createComment(req: Request, res: Response, next: NextFunction) {
-        const { postId, comment } = req.body;
-        const authorId = req.user._id;
+export default class CommentMiddleware {
+    /**
+     * Verifies is the `authorId` in the request is the same as the authorId for the comment the request is trying to access
+     * @param {express.Request} req Request object
+     * @param {express.Response} res Response object
+     * @param {express.NextFunction} next The next function to call if this one passes
+     */
+    static async verifyAuthor(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.body;
+        const currUserId = req.user._id;
 
-        const newComment = new Comment({
-            postId,
-            comment,
-            authorId,
-        });
-
-        return newComment
-            .save()
-            .then((result: any) => res.status(201).json({ success: true, message: result }))
-            .catch((err: any) => {
-                logger.error(`Error while creating a new comment: ${err}`);
-                return res.status(500).json({ success: false, message: err.message });
-            });
-    }
-
-    getComment(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.query;
-        return Comment.findById(id)
-            .orFail(new Error('Comment not found'))
-            .exec()
-            .then((result) => res.status(200).json({ success: true, message: result }))
-            .catch((err) => {
-                logger.error(`Error while getting a comment ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
-            });
-    }
-
-    editComment(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.query;
-        const { comment } = req.body;
-        return Comment.findByIdAndUpdate(id, { comment })
-            .orFail(new Error('Comment not found!'))
-            .exec()
-            .then((result) => res.status(200).json({ success: true, message: result }))
-            .catch((err) => {
-                logger.error(`Error when editing a comment ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
-            });
-    }
-
-    async deleteComment(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.query;
-        const commentAuthor = await Comment.findById(id).orFail(new Error('Comment not found!')).exec();
-
-        if (commentAuthor._id !== req.user._id) {
-            // TODO: add a custom error and a try/catch
-            logger.error(`Error when deleting a comment ${id}: User is not author of post`);
+        // Verify first that this comment exists in the database
+        // TODO: #10 add this logging to the controller and use the controller method here instead
+        let comment;
+        try {
+            comment = await Comment.findById(id).orFail(new Error('Comment not found!')).exec();
+        } catch (e) {
+            if (e instanceof mongoose.Error.DocumentNotFoundError) {
+                logger.info(`Document with id ${id} not found.`);
+                return res
+                    .status(400)
+                    .json({ success: false, message: 'Comment was not found' });
+            }
+            logger.info(`Error finding comment ${id} with error ${e}`);
             return res
-                .status(401)
-                .json({ success: false, message: 'User is not author of post.' });
+                .status(500)
+                .json({ success: false, message: e });
         }
 
-        return Comment.findByIdAndRemove(id)
-            .orFail(new Error('Comment not found!'))
-            .exec()
-            .then((result) => res.status(200).json({ success: true, message: result }))
-            .catch((err) => {
-                logger.error(`Error while removing a comment ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
-            });
-    }
+        // Note: use .equals instead of ==
+        if (comment.authorId.equals(currUserId)) { return next(); }
 
-    likeComment(req: Request, res: Response, next: NextFunction) {
-        const { commentId } = req.query;
-        return Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user._id } })
-            .orFail(new Error('Comment not found!'))
-            .exec()
-            .then((result) => res.status(200).json({ success: true, message: result }))
-            .catch((err) => {
-                logger.error(`Error while liking a comment ${commentId}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
-            });
+        return res
+            .status(500)
+            .json({ success: false, message: 'Author id does not match. Access forbidden.' });
     }
 }
