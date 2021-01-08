@@ -8,13 +8,16 @@ export default class locationMiddleware {
     checkProximity(req: Request, res: Response, next: NextFunction) {
         const { long, lat } = req.body;
 
-        Location.find({ geoLocation: { $near: { $maxDistance: 10, $geometry: { type: 'Point', coordinates: [long, lat] } } } }).exec()
+        Location.find({ geoLocation: { $near: { $maxDistance: 10, $geometry: { type: 'Point', coordinates: [long, lat] } } } })
+            .orFail(new Error('Location not found!'))
+            .exec()
             .then((locations) => {
                 if (locations.length !== 0) {
-                    return res.status(406).json({ success: false, message: locations });
+                    return res.status(406).json({ success: false, message: 'There is a pre-existing location within 10 meters of your location.' });
                 }
-                next();
-            }).catch((error) => res.status(500).json({ success: false, message: 'Error checking proximity', data: error }));
+                return next();
+            })
+            .catch((error) => res.status(500).json({ success: false, message: 'Error checking proximity', data: error }));
     }
 
     validateLocation(req: Request, res: Response, next: NextFunction) {
@@ -27,7 +30,7 @@ export default class locationMiddleware {
         } if (!validCoord) {
             return res.status(400).json({ success: false, message: 'Not a valid coordinate.' });
         }
-        next();
+        return next();
     }
 
     validateQueryInput(req: Request, res: Response, next: NextFunction) {
@@ -39,6 +42,6 @@ export default class locationMiddleware {
         } if (!maxDistance) {
             return res.status(400).json({ success: false, message: 'Missing value: maxDistance' });
         }
-        next();
+        return next();
     }
 }
