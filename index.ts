@@ -23,12 +23,12 @@ import helmet from 'helmet';
 
 dotenv.config();
 
-const RedisStore = connectRedis(session)
+const RedisStore = connectRedis(session);
 const client = new Redis({
     port: Number(process.env.REDIS_PORT),
     host: process.env.REDIS_HOST,
     password: process.env.REDIS_PASSWORD
-})
+});
 
 const app = express();
 const port = process.env.PORT || 3000;

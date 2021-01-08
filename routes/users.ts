@@ -79,4 +79,16 @@ router.patch('/',
     isAuthenticated,
     (req, res) => userController.updateProfile(req, res));
 
+router.post('/forgot', (req, res) => {
+    return userController.postResetPassword(req, res);
+})
+
+router.get('/reset/:token', (req, res) => {
+    return userController.checkToken(req, res);
+})
+
+router.post('/reset/:token', userMiddleware.checkPasswordMatch, (req, res) => {
+    return userController.postPasswordReset(req, res);
+})
+
 export default router;

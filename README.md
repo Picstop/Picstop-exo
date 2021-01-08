@@ -30,6 +30,7 @@ start redis server upon computer boot:
 	REDIS_NAME= 
 	REDIS_AGE=
 	NODE_ENV= development || production
+	LOGIN_USER=support@picstopapp.us
 
 
 	
