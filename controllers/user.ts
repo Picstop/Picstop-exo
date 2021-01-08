@@ -45,7 +45,7 @@ export default class UserController {
                     logger.error(`User doesn't exist: ${err}`);
                     return res.status(400).json({ success: false, message: 'User doesn\'t exist' });
                 }
-                req.logIn(user, (error) => {
+                return req.logIn(user, (error) => {
                     if (error) {
                         logger.error(`Error when logging a user in: ${error}`);
                         return res.status(500).json({ success: false, message: 'Login error' });
@@ -62,10 +62,13 @@ export default class UserController {
     }
 
     async getUser(req: Request, res: Response) {
-        const { username } = req.params;
-        User.findOne({ username }).exec()
-            .then((user: IUser) => res.status(200).json({ success: true, message: user })).catch((err: Error) => {
-                logger.error(`Error getting user by username: ${username} with error: ${err}`);
+        const { id } = req.params;
+        User.findById(id)
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then((user: IUser) => res.status(200).json({ success: true, message: user }))
+            .catch((err: Error) => {
+                logger.error(`Error getting user by id: ${id} with error: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
@@ -78,13 +81,18 @@ export default class UserController {
                 logger.error(`Error getting user ${id} 's privacy setting`);
                 return res.status(500).json({ success: false, message: 'Error getting user\'s privacy setting' });
             } if (isPrivate) {
-                await User.findByIdAndUpdate(id, { $push: { followerRequests: req.user._id } }).exec();
+                await User.findByIdAndUpdate(id, { $push: { followerRequests: req.user._id } })
+                    .orFail(new Error('User not found!'))
+                    .exec();
                 return res.status(200).json({ success: true, message: 'Successfully requested to follow user' });
-            } if (!isPrivate) {
-                await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } }).exec();
-                await User.findByIdAndUpdate(req.user._id, { $push: { following: id } }).exec();
-                return res.status(200).json({ success: true, message: 'Successfully followed user' });
             }
+            await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } })
+                .orFail(new Error('User not found!'))
+                .exec();
+            await User.findByIdAndUpdate(req.user._id, { $push: { following: id } })
+                .orFail(new Error('User not found!'))
+                .exec();
+            return res.status(200).json({ success: true, message: 'Successfully followed user' });
         } catch (error) {
             logger.error(`Error following / requesting ${id} by ${req.user._id} with error: ${error}`);
             return res.status(500).json({ success: false, message: error });
@@ -92,15 +100,21 @@ export default class UserController {
     }
 
     async isPrivate(id: IUser['id']) {
-        const user = await User.findById(id).exec();
+        const user = await User.findById(id)
+            .orFail(new Error('User not found!'))
+            .exec();
         return user.private;
     }
 
     async blockUser(req: Request, res: Response) {
         const { id } = req.body;
         try {
-            await User.findByIdAndUpdate(req.user._id, { $push: { blocked: id }, $pull: { following: id, followers: id } }).exec();
-            await User.findByIdAndUpdate(id, { $pull: { following: req.user._id, followers: req.user._id } }).exec();
+            await User.findByIdAndUpdate(req.user._id, { $push: { blocked: id }, $pull: { following: id, followers: id } })
+                .orFail(new Error('User not found!'))
+                .exec();
+            await User.findByIdAndUpdate(id, { $pull: { following: req.user._id, followers: req.user._id } })
+                .orFail(new Error('User not found!'))
+                .exec();
             return res.status(200).json({ success: true, message: `Successfully blocked user ${id}` });
         } catch (error) {
             logger.error(`Error blocking user ${id} by ${req.user._id}`);
@@ -112,8 +126,11 @@ export default class UserController {
     // check if blocked
     async unblockUser(req: Request, res: Response) {
         const { id } = req.body;
-        User.findByIdAndUpdate(req.user._id, { $pull: { blocked: id } }).exec()
-            .then(() => res.status(200).json({ success: true, message: `Successfully unblocked ${id}` })).catch((error) => {
+        User.findByIdAndUpdate(req.user._id, { $pull: { blocked: id } })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: `Successfully unblocked ${id}` }))
+            .catch((error) => {
                 logger.error(`Error unblocking ${id} by ${req.user._id} with error: ${error}`);
                 return res.status(500).json({ success: false, message: error });
             });
@@ -123,8 +140,11 @@ export default class UserController {
     // check if already unfollowed
     async unfollowUser(req: Request, res: Response) {
         const { id } = req.body;
-        User.findByIdAndUpdate(req.user._id, { $pull: { following: id } }).exec()
-            .then(() => res.status(200).json({ success: true, message: `Successfully unfollowed ${id}` })).catch((error) => {
+        User.findByIdAndUpdate(req.user._id, { $pull: { following: id } })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: `Successfully unfollowed ${id}` }))
+            .catch((error) => {
                 logger.error(`Error unfollowing ${id} by ${req.user._id} with error: ${error}`);
                 return res.status(500).json({ success: false, message: error });
             });
@@ -135,8 +155,12 @@ export default class UserController {
     async acceptFollowRequest(req: Request, res: Response) {
         const { id } = req.body;
         try {
-            await User.findByIdAndUpdate(req.user._id, { $pull: { followerRequests: id }, $push: { followers: id } }).exec();
-            await User.findByIdAndUpdate(id, { $push: { following: req.user._id } }).exec();
+            await User.findByIdAndUpdate(req.user._id, { $pull: { followerRequests: id }, $push: { followers: id } })
+                .orFail(new Error('User not found!'))
+                .exec();
+            await User.findByIdAndUpdate(id, { $push: { following: req.user._id } })
+                .orFail(new Error('User not found!'))
+                .exec();
             return res.status(200).json({ success: true, message: 'Successfully accepted follow request' });
         } catch (error) {
             logger.error(`Error accepting ${id} 's follow request for ${req.user._id} with error: ${error}`);
@@ -146,8 +170,11 @@ export default class UserController {
 
     async removeFollowRequest(req: Request, res: Response) {
         const { id } = req.body;
-        User.findByIdAndUpdate(id, { $pull: { followerRequests: req.user._id } }).exec()
-            .then(() => res.status(200).json({ success: true, message: `Successfully removed follow request to ${id}` })).catch((error) => {
+        User.findByIdAndUpdate(id, { $pull: { followerRequests: req.user._id } })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: `Successfully removed follow request to ${id}` }))
+            .catch((error) => {
                 logger.error(`Error removing follow request to ${id} by ${req.user._id} with error: ${error}`);
                 return res.status(500).json({ success: false, message: error });
             });
@@ -155,9 +182,12 @@ export default class UserController {
 
     async updateUsername(req: Request, res: Response) {
         const username = req.body.username.trim().toLowerCase();
-        if (username == req.user.username) return res.status(400).json({ success: true, message: 'Username is the same as requested' });
-        User.findByIdAndUpdate(req.user._id, { username }, { runValidators: true }).exec()
-            .then(() => res.status(200).json({ success: true, message: 'Successfully updated username' })).catch((error) => {
+        if (username === req.user.username) return res.status(400).json({ success: true, message: 'Username is the same as requested' });
+        return User.findByIdAndUpdate(req.user._id, { username }, { runValidators: true })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Successfully updated username' }))
+            .catch((error) => {
                 if (error.codeName === 'DuplicateKey') return res.status(400).json({ success: false, message: 'Username already exists' });
                 if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
                 logger.error(`Error updating username to ${username} for user ${req.user._id} with error ${error}`);
@@ -167,18 +197,25 @@ export default class UserController {
 
     async updatePrivacy(req: Request, res: Response) {
         const { privacy } = req.body;
-        if (privacy == false) {
+        if (privacy === false) {
             try {
-                await User.update({ _id: { $in: req.user.followerRequests } }, { $push: { following: req.user._id } }).exec();
-                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: { $each: req.user.followerRequests } }, $set: { followerRequests: [] } }).exec();
+                await User.updateMany({ _id: { $in: req.user.followerRequests } }, { $push: { following: req.user._id } })
+                    .orFail(new Error('User not found!'))
+                    .exec();
+                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: req.user.followerRequests }, $set: { followerRequests: [] } })
+                    .orFail(new Error('User not found!'))
+                    .exec();
                 return res.status(200).json({ success: true, message: 'Succesfully updated privacy setting and added all follower requests as followers' });
             } catch (error) {
                 logger.error(`Error updating privacy to ${privacy} and adding all follow requests as followers for user ${req.user._id} with error: ${error}`);
                 return res.status(500).json({ success: false, message: error });
             }
         } else {
-            User.findByIdAndUpdate(req.user._id, { private: privacy }).exec()
-                .then(() => res.status(200).json({ success: true, message: 'Successfully updated privacy setting' })).catch((error: Error) => {
+            return User.findByIdAndUpdate(req.user._id, { private: privacy })
+                .orFail(new Error('User not found!'))
+                .exec()
+                .then(() => res.status(200).json({ success: true, message: 'Successfully updated privacy setting' }))
+                .catch((error: Error) => {
                     logger.error(`Error updating privacy to ${privacy} for user ${req.user._id} with error: ${error}`);
                     return res.status(500).json({ success: false, message: error });
                 });
@@ -188,8 +225,11 @@ export default class UserController {
     async updateProfile(req: Request, res: Response) {
         const { name, bio } = req.body;
 
-        User.findByIdAndUpdate(req.user._id, { name, bio }, { runValidators: true }).exec()
-            .then(() => res.status(200).json({ success: true, message: 'Successfully updated name and bio. ' })).catch((error: Error) => {
+        User.findByIdAndUpdate(req.user._id, { name, bio }, { runValidators: true })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Successfully updated name and bio. ' }))
+            .catch((error: Error) => {
                 if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
                 logger.error(`Error updating profile for user ${req.user._id}`);
                 return res.status(500).json({ success: false, message: error });
@@ -201,13 +241,15 @@ export default class UserController {
             function (done) {
                 User.findOne({
                     email: req.body.email,
-                }).exec((err, user) => {
-                    if (user) {
-                        done(err, user);
-                    } else {
-                        done('User not found.');
-                    }
-                });
+                })
+                    .orFail(new Error('User not found!'))
+                    .exec((err, user) => {
+                        if (user) {
+                            done(err, user);
+                        } else {
+                            done('User not found.');
+                        }
+                    });
             },
             function (user, done) {
                 // create the random token
@@ -217,9 +259,11 @@ export default class UserController {
                 });
             },
             function (user, token, done) {
-                User.findByIdAndUpdate({ _id: user._id }, { resetPasswordToken: token, resetPasswordExpires: Date.now() + 86400000 }, { new: true }).exec((err, new_user) => {
-                    done(err, token, new_user);
-                });
+                User.findByIdAndUpdate({ _id: user._id }, { resetPasswordToken: token, resetPasswordExpires: Date.now() + 86400000 }, { new: true })
+                    .orFail(new Error('User not found!'))
+                    .exec((err, newUser) => {
+                        done(err, token, newUser);
+                    });
             },
             function (token, user, done) {
                 SES.sendEmail({
@@ -246,14 +290,18 @@ export default class UserController {
     }
 
     async checkToken(req: Request, res: Response) {
-        User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }).exec()
-            .then(() => res.status(200).json({ success: true, message: 'Valid reset token', token: req.params.token })).catch(() => res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' }));
+        User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Valid reset token', token: req.params.token }))
+            .catch(() => res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' }));
     }
 
     async postPasswordReset(req: Request, res: Response) {
         async.waterfall([
             function (done) {
                 User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, async (err, user) => {
+                    if (err) return res.status(400).json({ success: false, message: 'Error finding user' });
                     if (!user) {
                         return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
                     }
@@ -262,10 +310,10 @@ export default class UserController {
                     user.resetPasswordToken = undefined;
                     user.resetPasswordExpires = undefined;
 
-                    await user.save((err) => {
-                        done(err, user);
+                    await user.save((err1) => {
+                        done(err1, user);
                     });
-                });
+                }).orFail(new Error('User not found!'));
             },
             function (user, done) {
                 SES.sendEmail({
