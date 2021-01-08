@@ -4,10 +4,8 @@ import * as dotenv from 'dotenv';
 
 import { Strategy as LocalStrategy } from 'passport-local';
 import Location from './models/location';
-import Redis from 'ioredis'
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
-import connectRedis from 'connect-redis'
 import db from './database/database';
 import express from 'express';
 import initLogger from './core/logger';
@@ -16,24 +14,18 @@ import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session'
 import userRoutes from './routes/users'
+import { RedisStore, client } from './core/redis';
 
 dotenv.config();
 
-const RedisStore = connectRedis(session)
-const client = new Redis({
-    port: Number(process.env.REDIS_PORT),
-    host: process.env.REDIS_HOST,
-    password: process.env.REDIS_PASSWORD
-})
+
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 const logger = initLogger('index');
 
-client.on('connect', () =>{
-    logger.info('Connected to Redis')
-})
+
 
 app.use(session({
     store: new RedisStore({
