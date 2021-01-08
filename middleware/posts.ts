@@ -8,7 +8,7 @@ const logger = initLogger('MiddlewarePosts');
 
 export default class PostMiddleware {
     /**
-     * Verifies is the `authorId` in the request is the same as the authorId for the post the request is trying to ac
+     * Verifies is the `authorId` in the request is the same as the authorId for the post the request is trying to access
      * @param {express.Request} req Request object
      * @param {express.Response} res Response object
      * @param {express.NextFunction} next The next function to call if this one passes
