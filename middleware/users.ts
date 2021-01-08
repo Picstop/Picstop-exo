@@ -3,10 +3,6 @@ import { NextFunction, Request, Response } from 'express'
 import User from '../models/user';
 import initLogger from '../core/logger';
 
-
-
-
-
 export default class UserMiddleware {
 
     checkFields(req: Request, res: Response, next: NextFunction){

@@ -2,7 +2,7 @@ node_modules
 .env
 dist
 
-# Needed so that Eslint doesn't curse at me every time I check smth out.
-*.js text eol=lf
-
 **.log
+
+# For jest coverage reports
+coverage

@@ -14,14 +14,32 @@ import morgan from 'morgan';
 import passport from 'passport';
 import session from 'express-session'
 import userRoutes from './routes/users'
+<<<<<<< HEAD
 import { RedisStore, client } from './core/redis';
 
 dotenv.config();
 
 
+=======
+import commentRoutes from './routes/comments'
+import postRoutes from './routes/posts'
+import reportRoutes from './routes/reports'
+import helmet from 'helmet';
+
+dotenv.config();
+
+const RedisStore = connectRedis(session);
+const client = new Redis({
+    port: Number(process.env.REDIS_PORT),
+    host: process.env.REDIS_HOST,
+    password: process.env.REDIS_PASSWORD
+});
+>>>>>>> master
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(helmet());
 
 const logger = initLogger('index');
 
@@ -58,6 +76,10 @@ app.get('/', (req, res) => {
 });
 app.use('/locations', locationRoutes);
 app.use('/user', userRoutes);
+app.use('/comments', commentRoutes);
+app.use('/posts', postRoutes);
+app.use('/report', reportRoutes);
+
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
 }).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
