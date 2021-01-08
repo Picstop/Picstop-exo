@@ -13,7 +13,7 @@ export default class PostMiddleware {
      * @param {express.Response} res Response object
      * @param {express.NextFunction} next The next function to call if this one passes
      */
-    async verifyAuthor(req: Request, res: Response, next: NextFunction) {
+    static async verifyAuthor(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
         const currUserId = req.user['_id'];
 
