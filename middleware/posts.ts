@@ -20,7 +20,7 @@ export default class PostMiddleware {
         // TODO: #8 add this logging to the controller and use the controller method here instead
         let post;
         try {
-            post = await Post.findById(id);
+            post = await Post.findById(id).exec();
         } catch (e) {
             if (e instanceof mongoose.Error.DocumentNotFoundError) {
                 logger.info(`Document with id ${id} not found.`);
