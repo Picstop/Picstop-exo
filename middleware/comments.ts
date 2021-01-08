@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { NextFunction, Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express';
 
 import Comment from '../models/comment';
 import initLogger from '../core/logger';
@@ -13,9 +13,9 @@ export default class CommentMiddleware {
      * @param {express.Response} res Response object
      * @param {express.NextFunction} next The next function to call if this one passes
      */
-    async verifyAuthor(req: Request, res: Response, next: NextFunction) {
+    static async verifyAuthor(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const currUserId = req.user['_id'];
+        const currUserId = req.user._id;
 
         // Verify first that this comment exists in the database
         // TODO: #10 add this logging to the controller and use the controller method here instead
@@ -28,9 +28,8 @@ export default class CommentMiddleware {
                 return res
                     .status(400)
                     .json({ success: false, message: 'Comment was not found' });
-            } else {
-                throw e;
             }
+            throw e;
         }
 
         // Note: use .equals instead of ==
