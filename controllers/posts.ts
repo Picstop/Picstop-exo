@@ -10,6 +10,7 @@ import { Post as PostType, NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import { client } from '../core/redis';
+import { removeNullUndef } from '../core/helpers';
 
 const logger = initLogger('ControllerPosts');
 
@@ -41,11 +42,15 @@ export default class PostController {
         const {
             authorId, caption, location, files,
         } = req.body;
+<<<<<<< HEAD
         const post: PostType = {
+=======
+        const post = removeNullUndef({
+>>>>>>> 9991f0233e60900a33ac918c70d3ff04af388dd6
             authorId,
             location,
-        };
-        if (caption) post.caption = caption;
+            caption
+        });
 
         return Post.create(post).exec()
             .then((result: any) => this.getUpload(files, authorId, result._id)
@@ -181,25 +186,21 @@ export default class PostController {
                     .then(() => resolve(posts))
                     .catch((err) => reject(err));
             }))
-            .then((result) => res.status(200).json({
-                success: true,
-                message: result,
-            }))
-            // .then(async (result: any) => { //switch me in when aws upload is merged
-            //     const orderPromises = result.map((i) => this.getDownload(i));
-            //     return Promise.all(orderPromises)
-            //         .then((urls) => res.status(200).json({
-            //             success: true,
-            //             message: {
-            //                 posts: result,
-            //                 url: urls,
-            //             },
-            //         }))
-            //         .catch((err) => {
-            //             logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
-            //             return res.status(500).json({ success: false, message: err });
-            //         });
-            // })
+            .then(async (result: any) => {
+                const orderPromises = result.map((i) => this.getDownload(i));
+                return Promise.all(orderPromises)
+                    .then((urls) => res.status(200).json({
+                        success: true,
+                        message: {
+                            posts: result,
+                            url: urls,
+                        },
+                    }))
+                    .catch((err) => {
+                        logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
+                        return res.status(500).json({ success: false, message: err });
+                    });
+            })
             .catch((err) => {
                 logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
                 return res.status(500).json({ success: false, message: err });
