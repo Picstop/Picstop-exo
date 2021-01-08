@@ -8,13 +8,13 @@ import Post from '../models/post';
 import { Post as PostType } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
-import Redis from 'ioredis'
+import { client } from '../core/redis';
 
 const logger = initLogger('ControllerPosts');
 
-const client = Redis.createClient(process.env.REDIS_PORT);
 
-client.on("error", (err) => logger.error(`Redis Error: ${err}`));
+
+
 
 export default class PostController {
     createPost(req: Request, res: Response, next: NextFunction) {
@@ -97,7 +97,7 @@ export default class PostController {
     async getFeedSet(req: Request, res: Response) {
         const { userId } = req.body;
         const getStr = `SeenPosts:${userId}`;
-        const PostList = await client.get(getStr).split(",")||[];
+        const PostList = await client.get(getStr).split(",") || [];
 
         User.findById(userId).exec()
             .then(usr => Post.find({
@@ -109,7 +109,7 @@ export default class PostController {
                 authorId: {
                     $in: usr.following
                 }
-            }).sort({date: 'descending'}).limit(20))
+            }).limit(20))
             .then(posts => new Promise((resolve, reject) => {
                 posts.forEach(p => PostList.push(p['_id']))
                 client.setex(getStr, 600, PostList.toString())
