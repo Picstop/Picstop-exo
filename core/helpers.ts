@@ -1,8 +1,9 @@
+/* eslint-disable import/prefer-default-export */
 export const removeNullUndef = (obj: any) => {
     Object.keys(obj)
-        .forEach(key => {
+        .forEach((key) => {
             if (obj[key] == undefined || obj[key] == null || obj[key] == []) {
-                delete obj[key]
+                delete obj[key];
             }
         });
     return obj;

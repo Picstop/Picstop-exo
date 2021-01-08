@@ -42,14 +42,10 @@ export default class PostController {
         const {
             authorId, caption, location, files,
         } = req.body;
-<<<<<<< HEAD
-        const post: PostType = {
-=======
         const post = removeNullUndef({
->>>>>>> 9991f0233e60900a33ac918c70d3ff04af388dd6
             authorId,
             location,
-            caption
+            caption,
         });
 
         return Post.create(post).exec()
