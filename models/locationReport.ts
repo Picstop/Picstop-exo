@@ -1,8 +1,8 @@
 import mongoose, { Schema } from 'mongoose';
 
-import { UserReport } from '../types/types';
+import { LocationReport } from '../types/types';
 
-const userReportSchema = new Schema({
+const locationReportSchema = new Schema({
     reason: { 
         type: 'string',
         required: [true, 'Reason is required']
@@ -14,10 +14,10 @@ const userReportSchema = new Schema({
         required: [true, 'Report author ID is required']
 
     },
-    user: {
+    location: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'Report user ID is required']
+        ref: 'Post',
+        required: [true, 'Report location ID is required']
     }
        
 
@@ -26,4 +26,4 @@ const userReportSchema = new Schema({
     timestamps: true,
 });
 
-export default mongoose.model<UserReport>('UserReport', userReportSchema);
+export default mongoose.model<LocationReport>('LocationReport', locationReportSchema);

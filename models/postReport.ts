@@ -13,6 +13,11 @@ const postReportSchema = new Schema({
         ref: 'User',
         required: [true, 'Report author ID is required']
 
+    },
+    post: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+        required: [true, 'Report post ID is required']
     }
        
 

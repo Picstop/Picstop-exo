@@ -13,6 +13,11 @@ const commentReportSchema = new Schema({
         ref: 'User',
         required: [true, 'Report author ID is required']
 
+    },
+    comment: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+        required: [true, 'Comment ID is required']
     }
        
 

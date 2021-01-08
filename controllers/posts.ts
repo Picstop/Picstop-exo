@@ -73,9 +73,9 @@ export default class PostController {
     }
 
     async updatePostCaption(req: Request, res: Response, next: NextFunction) {
-        const authorId = Post.find({ authorId: req.user.id });
+        const authorId = Post.find({ authorId: req.user['_id'] });
         const { caption, postId } = req.body;
-        if (authorId !== req.user.id) {
+        if (authorId !== req.user['_id']) {
             // TODO: raise and try/catch a custom error here
             logger.info('Error when updating post caption: User is not an author of post');
             return res.status(401).json({ success: false, message: 'User is not author of post.' });
