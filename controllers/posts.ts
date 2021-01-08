@@ -41,7 +41,7 @@ export default class PostController {
         const {
             authorId, caption, location, files,
         } = req.body;
-        const post = {
+        const post: PostType = {
             authorId,
             location,
         };
