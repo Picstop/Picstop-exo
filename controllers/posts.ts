@@ -48,7 +48,7 @@ export default class PostController {
             caption,
         });
 
-        return Post.create(post).exec()
+        return Post.create(post)
             .then((result: any) => this.getUpload(files, authorId, result._id)
                 .then((url: Array<string>) => res.status(201).json({
                     success: true,

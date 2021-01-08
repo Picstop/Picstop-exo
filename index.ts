@@ -1,7 +1,6 @@
 import './config/passport';
 
 import * as dotenv from 'dotenv';
-
 import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
@@ -18,10 +17,10 @@ import initLogger from './core/logger';
 import db from './database/database';
 import Location from './models/location';
 import userRoutes from './routes/users';
+
 import { RedisStore, client } from './core/redis';
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 3000;
 

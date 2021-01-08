@@ -170,7 +170,7 @@ export default class UserController {
         if (privacy == false) {
             try {
                 await User.update({ _id: { $in: req.user.followerRequests } }, { $push: { following: req.user._id } }).exec();
-                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: req.user.followerRequests }, $set: { followerRequests: [] } }).exec();
+                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: { $each: req.user.followerRequests } }, $set: { followerRequests: [] } }).exec();
                 return res.status(200).json({ success: true, message: 'Succesfully updated privacy setting and added all follower requests as followers' });
             } catch (error) {
                 logger.error(`Error updating privacy to ${privacy} and adding all follow requests as followers for user ${req.user._id} with error: ${error}`);
