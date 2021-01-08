@@ -1,12 +1,11 @@
 import { body, validationResult } from 'express-validator';
-import express, { Request, Response } from 'express';
-
+import express, { Response } from 'express';
+import { NewRequest as Request } from '../types/types';
 import LocationController from '../controllers/locations';
 import LocationMiddleware from '../middleware/locations';
 
 const locMiddleware = new LocationMiddleware();
-const checkProximity = locMiddleware.checkProximity;
-const validateLocation = locMiddleware.validateLocation;
+const { checkProximity, validateLocation } = locMiddleware;
 const validateLocInput = locMiddleware.validateQueryInput;
 
 const locations = new LocationController();

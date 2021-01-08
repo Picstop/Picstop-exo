@@ -1,40 +1,26 @@
-import './config/passport'
+import './config/passport';
 
 import * as dotenv from 'dotenv';
 
 import { Strategy as LocalStrategy } from 'passport-local';
-import Location from './models/location';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
-import db from './database/database';
 import express from 'express';
-import initLogger from './core/logger';
-import locationRoutes from './routes/locations';
 import morgan from 'morgan';
 import passport from 'passport';
-import session from 'express-session'
-import userRoutes from './routes/users'
-<<<<<<< HEAD
+import session from 'express-session';
+import helmet from 'helmet';
+import locationRoutes from './routes/locations';
+import commentRoutes from './routes/comments';
+import postRoutes from './routes/posts';
+import reportRoutes from './routes/reports';
+import initLogger from './core/logger';
+import db from './database/database';
+import Location from './models/location';
+import userRoutes from './routes/users';
 import { RedisStore, client } from './core/redis';
 
 dotenv.config();
-
-
-=======
-import commentRoutes from './routes/comments'
-import postRoutes from './routes/posts'
-import reportRoutes from './routes/reports'
-import helmet from 'helmet';
-
-dotenv.config();
-
-const RedisStore = connectRedis(session);
-const client = new Redis({
-    port: Number(process.env.REDIS_PORT),
-    host: process.env.REDIS_HOST,
-    password: process.env.REDIS_PASSWORD
-});
->>>>>>> master
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -43,8 +29,6 @@ app.use(helmet());
 
 const logger = initLogger('index');
 
-
-
 app.use(session({
     store: new RedisStore({
         client,
@@ -52,7 +36,7 @@ app.use(session({
         cookie: {
             maxAge: Number(process.env.REDIS_AGE),
             secure: process.env.NODE_ENV === 'production',
-            sameSite: true
+            sameSite: true,
 
         },
     }),
@@ -60,7 +44,7 @@ app.use(session({
     secret: process.env.REDIS_SECRET,
     resave: false,
 
-}))
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());

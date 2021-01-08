@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { NextFunction, Request, Response } from 'express';
-
+import { NextFunction, Response } from 'express';
+import { NewRequest as Request } from '../types/types';
 import Post from '../models/post';
 import initLogger from '../core/logger';
 

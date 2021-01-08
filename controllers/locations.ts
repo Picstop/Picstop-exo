@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
+import _ from 'lodash';
 import Location from '../models/location';
 import {
-Location as LocationType,
+    Location as LocationType,
+    NewRequest as Request,
 } from '../types/types';
-import _ from 'lodash';
 
 /* eslint-disable no-underscore-dangle */
 
@@ -12,29 +13,27 @@ import _ from 'lodash';
 
 export default class LocationController {
     async addLocation(req: Request, res: Response) {
-        const { long, lat, author, name } = req.body;
-        const isOfficial = author === 'Picstop'
+        const {
+            long, lat, author, name,
+        } = req.body;
+        const isOfficial = author === 'Picstop';
         const newLoc = new Location({
             name,
             author,
             isOfficial,
-            geoLocation: { type: 'Point', coordinates: [long, lat] }
+            geoLocation: { type: 'Point', coordinates: [long, lat] },
 
-        })
+        });
 
         return newLoc.save()
-        .then(() => res.status(200).json({ success: true, message: 'Location added successfully', data: newLoc }))
-        .catch((err: Error) => res.status(500).json({ success: false, message: 'Error adding location', data: err }))
-
+            .then(() => res.status(200).json({ success: true, message: 'Location added successfully', data: newLoc }))
+            .catch((err: Error) => res.status(500).json({ success: false, message: 'Error adding location', data: err }));
     }
 
-    async findNearby(req: Request, res: Response){
+    async findNearby(req: Request, res: Response) {
         const { lat, long, maxDistance } = req.body;
         return Location.find({ geoLocation: { $near: { $maxDistance: maxDistance, $geometry: { type: 'Point', coordinates: [long, lat] } } } }).exec()
-        .then((locations) => res.status(200).json({ success: true, message: locations }))
-        .catch((error) => res.status(500).json({ success: false, message: 'Error checking proximity', data: error }))
+            .then((locations) => res.status(200).json({ success: true, message: locations }))
+            .catch((error) => res.status(500).json({ success: false, message: 'Error checking proximity', data: error }));
     }
-
-
-    
 }

@@ -1,43 +1,41 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import { IVerifyOptions } from 'passport-local';
 import passport from 'passport';
 
-import { IUser } from '../types/types';
-import User from '../models/user';
-import initLogger from '../core/logger';
-import async from 'async'; 
+import async from 'async';
 import crypto from 'crypto';
-import aws from 'aws-sdk'
-import bcrypt from 'bcrypt'
+import aws from 'aws-sdk';
+import bcrypt from 'bcrypt';
+import initLogger from '../core/logger';
+import User from '../models/user';
+import { IUser, NewRequest as Request } from '../types/types';
 
 const logger = initLogger('ControllerUser');
 const SES = new aws.SES({
-	region: 'us-east-1',
-	accessKeyId: process.env.AWS_ACCESS,
-	secretAccessKey: process.env.AWS_SECRET,
+    region: 'us-east-1',
+    accessKeyId: process.env.AWS_ACCESS,
+    secretAccessKey: process.env.AWS_SECRET,
 });
 export default class UserController {
-    async postSignup (req: Request, res: Response){
+    async postSignup(req: Request, res: Response) {
         const user = new User({
             email: req.body.email.trim(),
             password: req.body.password,
             username: req.body.username.trim().toLowerCase(),
         });
-    
-           
-            user.save((err) => {
-                if (err) {
-                    logger.error(`Error when saving a user: ${err}`);
-                    return res.status(400).json({ success: false, message: err.message });
-                }
-               return res.status(201).json({ success: true, message: 'Successfully signed up.' })
-            });
-    
-            passport.authenticate('local');
-        
-    };
-    
-    async postLogin (req: Request, res: Response, next: NextFunction) {
+
+        user.save((err) => {
+            if (err) {
+                logger.error(`Error when saving a user: ${err}`);
+                return res.status(400).json({ success: false, message: err.message });
+            }
+            return res.status(201).json({ success: true, message: 'Successfully signed up.' });
+        });
+
+        passport.authenticate('local');
+    }
+
+    async postLogin(req: Request, res: Response, next: NextFunction) {
         passport.authenticate(
             'local',
             (err: Error, user: IUser) => {
@@ -58,205 +56,174 @@ export default class UserController {
                 });
             },
         )(req, res, next);
-    };
-    
-    logout(req: Request, res: Response){
+    }
+
+    logout(req: Request, res: Response) {
         req.logout();
         return res.status(200).json({ success: true, message: 'logged out' });
-    };
+    }
 
-    async getUser(req: Request, res: Response){
+    async getUser(req: Request, res: Response) {
         const { id } = req.params;
         User.findById(id).exec()
-        .then((user: IUser) =>{
-            return res.status(200).json({ success: true, message: user })
-        }).catch((err: Error) => {
-            logger.error(`Error getting user by id: ${id} with error: ${err}`)
-            return res.status(500).json({ success: false, message: err.message })
-        })
+            .then((user: IUser) => res.status(200).json({ success: true, message: user })).catch((err: Error) => {
+                logger.error(`Error getting user by id: ${id} with error: ${err}`);
+                return res.status(500).json({ success: false, message: err.message });
+            });
     }
 
-
-
-    async followUser(req: Request, res: Response){
-        const id = req.body.id 
+    async followUser(req: Request, res: Response) {
+        const { id } = req.body;
         try {
-            
-            const isPrivate = await this.isPrivate(id)
-            if(isPrivate == null){
-                logger.error(`Error getting user ${id} 's privacy setting`)
-                return res.status(500).json({ success: false, message: 'Error getting user\'s privacy setting' })
-            } else if (isPrivate) {
-                await User.findByIdAndUpdate(id, { $push: {followerRequests: req.user['_id']} }).exec()
-                return res.status(200).json({ success: true, message: 'Successfully requested to follow user'});
-                
-            } else if(!isPrivate){
-                await  User.findByIdAndUpdate(id, {$push: {followers: req.user['_id']} }).exec()
-                await User.findByIdAndUpdate(req.user['_id'], {$push: {following: id }}).exec()
-                return res.status(200).json({ success: true, message: 'Successfully followed user'})
+            const isPrivate = await this.isPrivate(id);
+            if (isPrivate == null) {
+                logger.error(`Error getting user ${id} 's privacy setting`);
+                return res.status(500).json({ success: false, message: 'Error getting user\'s privacy setting' });
+            } if (isPrivate) {
+                await User.findByIdAndUpdate(id, { $push: { followerRequests: req.user._id } }).exec();
+                return res.status(200).json({ success: true, message: 'Successfully requested to follow user' });
+            } if (!isPrivate) {
+                await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } }).exec();
+                await User.findByIdAndUpdate(req.user._id, { $push: { following: id } }).exec();
+                return res.status(200).json({ success: true, message: 'Successfully followed user' });
             }
-
         } catch (error) {
-            logger.error(`Error following / requesting ${id} by ${req.user['_id']} with error: ${error}`)
-            return res.status(500).json({success: false, message: error})
+            logger.error(`Error following / requesting ${id} by ${req.user._id} with error: ${error}`);
+            return res.status(500).json({ success: false, message: error });
         }
     }
 
-
-    async isPrivate(id: IUser['id']){
-        const user = await User.findById(id).exec()
-        return user.private
+    async isPrivate(id: IUser['id']) {
+        const user = await User.findById(id).exec();
+        return user.private;
     }
 
-    async blockUser(req: Request, res: Response){
-        const { id } = req.body
+    async blockUser(req: Request, res: Response) {
+        const { id } = req.body;
         try {
-            await User.findByIdAndUpdate(req.user['_id'], {$push: {blocked: id }, $pull: { following: id, followers: id} }).exec()
-            await User.findByIdAndUpdate(id, {$pull: {following: req.user['_id'], followers: req.user['_id']}}).exec()
-            return res.status(200).json({ success: true, message: `Successfully blocked user ${id}` })
+            await User.findByIdAndUpdate(req.user._id, { $push: { blocked: id }, $pull: { following: id, followers: id } }).exec();
+            await User.findByIdAndUpdate(id, { $pull: { following: req.user._id, followers: req.user._id } }).exec();
+            return res.status(200).json({ success: true, message: `Successfully blocked user ${id}` });
         } catch (error) {
-            logger.error(`Error blocking user ${id} by ${req.user['_id']}`)
-            return res.status(500).json({ success: false, message: error })
+            logger.error(`Error blocking user ${id} by ${req.user._id}`);
+            return res.status(500).json({ success: false, message: error });
         }
-       
-       
     }
 
     // unblock
     // check if blocked
-    async unblockUser(req: Request, res: Response){
-        const id = req.body.id
-        User.findByIdAndUpdate(req.user['_id'], {$pull: {blocked: id }}).exec()
-        .then(() =>{
-            return res.status(200).json({ success: true, message: `Successfully unblocked ${id}`})
-        }).catch(error =>{
-            logger.error(`Error unblocking ${id} by ${req.user['_id']} with error: ${error}`)
-            return res.status(500).json({ success: false, message: error })
-        })
+    async unblockUser(req: Request, res: Response) {
+        const { id } = req.body;
+        User.findByIdAndUpdate(req.user._id, { $pull: { blocked: id } }).exec()
+            .then(() => res.status(200).json({ success: true, message: `Successfully unblocked ${id}` })).catch((error) => {
+                logger.error(`Error unblocking ${id} by ${req.user._id} with error: ${error}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
-   
-    //unfollow
+
+    // unfollow
     // check if already unfollowed
-    async unfollowUser(req: Request, res: Response){
-        const id = req.body.id;
-        User.findByIdAndUpdate(req.user['_id'], {$pull: {following: id }}).exec()
-        .then(() =>{
-            return res.status(200).json({ success: true, message: `Successfully unfollowed ${id}`})
-        }).catch(error =>{
-            logger.error(`Error unfollowing ${id} by ${req.user['_id']} with error: ${error}`)
-            return res.status(500).json({ success: false, message: error })
-        })
-
-
+    async unfollowUser(req: Request, res: Response) {
+        const { id } = req.body;
+        User.findByIdAndUpdate(req.user._id, { $pull: { following: id } }).exec()
+            .then(() => res.status(200).json({ success: true, message: `Successfully unfollowed ${id}` })).catch((error) => {
+                logger.error(`Error unfollowing ${id} by ${req.user._id} with error: ${error}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
 
     // accept follow request
-    //check if request exists
-    async acceptFollowRequest(req: Request, res: Response){
-        const id = req.body.id;
+    // check if request exists
+    async acceptFollowRequest(req: Request, res: Response) {
+        const { id } = req.body;
         try {
-            await User.findByIdAndUpdate(req.user['_id'], {$pull: {followerRequests: id}, $push: {followers: id}}).exec()
-            await User.findByIdAndUpdate(id, { $push: {following: req.user['_id']}}).exec()
-            return res.status(200).json({ success: true, message: 'Successfully accepted follow request'})
+            await User.findByIdAndUpdate(req.user._id, { $pull: { followerRequests: id }, $push: { followers: id } }).exec();
+            await User.findByIdAndUpdate(id, { $push: { following: req.user._id } }).exec();
+            return res.status(200).json({ success: true, message: 'Successfully accepted follow request' });
         } catch (error) {
-            logger.error(`Error accepting ${id} 's follow request for ${req.user['_id']} with error: ${error}`)
-            return res.status(500).json({ success: false, message: error })
+            logger.error(`Error accepting ${id} 's follow request for ${req.user._id} with error: ${error}`);
+            return res.status(500).json({ success: false, message: error });
         }
-
     }
 
-    async removeFollowRequest(req: Request, res: Response){
-        const id = req.body.id;
-        User.findByIdAndUpdate(id, {$pull: {followerRequests: req.user['_id'] }}).exec()
-        .then(() =>{
-            return res.status(200).json({ success: true, message: `Successfully removed follow request to ${id}`})
-        }).catch(error =>{
-            logger.error(`Error removing follow request to ${id} by ${req.user['_id']} with error: ${error}`)
-            return res.status(500).json({ success: false, message: error })
-        })
-        
+    async removeFollowRequest(req: Request, res: Response) {
+        const { id } = req.body;
+        User.findByIdAndUpdate(id, { $pull: { followerRequests: req.user._id } }).exec()
+            .then(() => res.status(200).json({ success: true, message: `Successfully removed follow request to ${id}` })).catch((error) => {
+                logger.error(`Error removing follow request to ${id} by ${req.user._id} with error: ${error}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
 
-    async updateUsername(req: Request, res: Response){
+    async updateUsername(req: Request, res: Response) {
         const username = req.body.username.trim().toLowerCase();
-        if (username == req.user['username']) return res.status(400).json({ success: true, message: 'Username is the same as requested' })
-        User.findByIdAndUpdate(req.user['_id'], {username: username}, {runValidators: true}).exec()
-        .then(() =>{
-            return res.status(200).json({ success: true, message: 'Successfully updated username'})
-        }).catch((error) => {
-            if (error.codeName === 'DuplicateKey') return res.status(400).json({ success: false, message: 'Username already exists' })
-            if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message})
-            logger.error(`Error updating username to ${username} for user ${req.user['_id']} with error ${error}`)
-            return res.status(500).json({ success: false, message: error})
-        })
-
-
+        if (username == req.user.username) return res.status(400).json({ success: true, message: 'Username is the same as requested' });
+        User.findByIdAndUpdate(req.user._id, { username }, { runValidators: true }).exec()
+            .then(() => res.status(200).json({ success: true, message: 'Successfully updated username' })).catch((error) => {
+                if (error.codeName === 'DuplicateKey') return res.status(400).json({ success: false, message: 'Username already exists' });
+                if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
+                logger.error(`Error updating username to ${username} for user ${req.user._id} with error ${error}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
-    
-    async updatePrivacy(req: Request, res: Response){
-        const privacy = req.body.privacy;
-        if (privacy == false){
+
+    async updatePrivacy(req: Request, res: Response) {
+        const { privacy } = req.body;
+        if (privacy == false) {
             try {
-                await User.update({ _id: {$in: req.user['followerRequests']}}, {$push: {following: req.user['_id']}}).exec()
-                await User.findByIdAndUpdate(req.user['_id'], { private: privacy, $push: {followers: req.user['followerRequests'] }, $set: {followerRequests: [] }}).exec()
-                return res.status(200).json({ success: true, message: 'Succesfully updated privacy setting and added all follower requests as followers'})
+                await User.update({ _id: { $in: req.user.followerRequests } }, { $push: { following: req.user._id } }).exec();
+                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: req.user.followerRequests }, $set: { followerRequests: [] } }).exec();
+                return res.status(200).json({ success: true, message: 'Succesfully updated privacy setting and added all follower requests as followers' });
             } catch (error) {
-                logger.error(`Error updating privacy to ${privacy} and adding all follow requests as followers for user ${req.user['_id']} with error: ${error}`)
-                return res.status(500).json({ success: false, message: error })
+                logger.error(`Error updating privacy to ${privacy} and adding all follow requests as followers for user ${req.user._id} with error: ${error}`);
+                return res.status(500).json({ success: false, message: error });
             }
- 
         } else {
-            User.findByIdAndUpdate(req.user['_id'], { private: privacy }).exec()
-            .then(() => {
-                return res.status(200).json({ success: true, message: 'Successfully updated privacy setting' })
-            }).catch((error: Error) => {
-                logger.error(`Error updating privacy to ${privacy} for user ${req.user['_id']} with error: ${error}`)
-                return res.status(500).json({ success: false, message: error })
-            })
+            User.findByIdAndUpdate(req.user._id, { private: privacy }).exec()
+                .then(() => res.status(200).json({ success: true, message: 'Successfully updated privacy setting' })).catch((error: Error) => {
+                    logger.error(`Error updating privacy to ${privacy} for user ${req.user._id} with error: ${error}`);
+                    return res.status(500).json({ success: false, message: error });
+                });
         }
-        
     }
 
-    async updateProfile(req: Request, res: Response){
+    async updateProfile(req: Request, res: Response) {
         const { name, bio } = req.body;
 
-        User.findByIdAndUpdate(req.user['_id'], {name: name, bio: bio}, {runValidators: true}).exec()
-        .then(() => {
-            return res.status(200).json({ success: true, message: 'Successfully updated name and bio. '})
-        }).catch((error: Error) => {
-            if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message})
-            logger.error(`Error updating profile for user ${req.user['_id']}`)
-            return res.status(500).json({ success: false, message: error})
-        })
+        User.findByIdAndUpdate(req.user._id, { name, bio }, { runValidators: true }).exec()
+            .then(() => res.status(200).json({ success: true, message: 'Successfully updated name and bio. ' })).catch((error: Error) => {
+                if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
+                logger.error(`Error updating profile for user ${req.user._id}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
 
-    async postResetPassword(req: Request, res: Response){
+    async postResetPassword(req: Request, res: Response) {
         async.waterfall([
-            function(done) {
-              User.findOne({
-                email: req.body.email
-              }).exec(function(err, user) {
-                if (user) {
-                  done(err, user);
-                } else {
-                  done('User not found.');
-                }
-              });
+            function (done) {
+                User.findOne({
+                    email: req.body.email,
+                }).exec((err, user) => {
+                    if (user) {
+                        done(err, user);
+                    } else {
+                        done('User not found.');
+                    }
+                });
             },
-            function(user, done) {
-              // create the random token
-              crypto.randomBytes(20, function(err, buffer) {
-                var token = buffer.toString('hex');
-                done(err, user, token);
-              });
+            function (user, done) {
+                // create the random token
+                crypto.randomBytes(20, (err, buffer) => {
+                    const token = buffer.toString('hex');
+                    done(err, user, token);
+                });
             },
-            function(user, token, done) {
-              User.findByIdAndUpdate({ _id: user._id }, { resetPasswordToken: token, resetPasswordExpires: Date.now() + 86400000 }, { new: true }).exec(function(err, new_user) {
-                done(err, token, new_user);
-              });
+            function (user, token, done) {
+                User.findByIdAndUpdate({ _id: user._id }, { resetPasswordToken: token, resetPasswordExpires: Date.now() + 86400000 }, { new: true }).exec((err, new_user) => {
+                    done(err, token, new_user);
+                });
             },
-            function(token, user, done) {
-  
+            function (token, user, done) {
                 SES.sendEmail({
                     Destination: {
                         ToAddresses: [user.email],
@@ -266,57 +233,43 @@ export default class UserController {
                             Html: {
                                 Charset: 'UTF-8',
                                 Data: `You are receiving this because you (or someone else) have requested the reset of the password for your account.<br/><br/>Please click on the following link, or paste this into your browser to reset your password:<br/><br/> https://${req.headers.host}/user/reset/${token}<br/><br/>If you did not request this, please ignore this email and your password will remain unchanged.<br/>`,
-                            }
+                            },
                         },
                         Subject: {
                             Charset: 'UTF-8',
                             Data: 'Password Reset',
-                        }
+                        },
                     },
                     Source: `Picstop <${process.env.LOGIN_USER}>`,
                 }).promise()
-                .then(() => {
-                    return res.status(200).json({ success: true, message: 'Sent password reset email'} )
-                }).catch((err) => {
-                    return done(err)
-                })
-            }
-          ], function(err) {
-            return res.status(500).json({ success: false, message: err });
-          });
+                    .then(() => res.status(200).json({ success: true, message: 'Sent password reset email' })).catch((err) => done(err));
+            },
+        ], (err) => res.status(500).json({ success: false, message: err }));
     }
 
-    async checkToken(req: Request, res: Response){
+    async checkToken(req: Request, res: Response) {
         User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }).exec()
-        .then(() => {
-            return res.status(200).json({ success: true, message: 'Valid reset token', token: req.params.token });
-        }).catch(() =>{
-            return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.'});
-        })
+            .then(() => res.status(200).json({ success: true, message: 'Valid reset token', token: req.params.token })).catch(() => res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' }));
     }
 
-    async postPasswordReset(req: Request, res: Response){
-    
+    async postPasswordReset(req: Request, res: Response) {
         async.waterfall([
-            function(done) {
-                User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, async function(err, user) {
+            function (done) {
+                User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, async (err, user) => {
                     if (!user) {
-                        return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.'});
+                        return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
                     }
 
-                    
                     user.password = req.body.password;
                     user.resetPasswordToken = undefined;
                     user.resetPasswordExpires = undefined;
-      
-                    await user.save(function(err) {
+
+                    await user.save((err) => {
                         done(err, user);
                     });
-            
-                    
                 });
             },
-            function(user, done) {
+            function (user, done) {
                 SES.sendEmail({
                     Destination: {
                         ToAddresses: [user.email],
@@ -326,27 +279,24 @@ export default class UserController {
                             Html: {
                                 Charset: 'UTF-8',
                                 Data: 'You are receiving this because you (or someone else) have successfully reset your password.<br/>',
-                            }
+                            },
                         },
                         Subject: {
                             Charset: 'UTF-8',
                             Data: 'Password Successfully Reset',
-                        }
+                        },
                     },
                     Source: `Picstop <${process.env.LOGIN_USER}>`,
                 }).promise();
                 done();
-            }
-        ], function(err) {
-            if(err){
-                if (err.name.includes('ValidationError')) return res.status(400).json({ success: false, message: err.message })
-                logger.error(`Error resetting password with error ${err} `)
-                return res.status(500).json({ success: false, message: err })
+            },
+        ], (err) => {
+            if (err) {
+                if (err.name.includes('ValidationError')) return res.status(400).json({ success: false, message: err.message });
+                logger.error(`Error resetting password with error ${err} `);
+                return res.status(500).json({ success: false, message: err });
             }
             return res.status(200).json({ success: true, message: 'Password successfully reset' });
         });
     }
-    
-    
 }
-

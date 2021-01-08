@@ -1,4 +1,5 @@
 import mongoose, { Document } from 'mongoose';
+import { Request, Response } from 'express';
 
 export type comparePasswordFunction = (
   p1: string,
@@ -68,3 +69,6 @@ export type LocationReport = Document & {
   location: mongoose.Schema.Types.ObjectId;
 }
 
+export interface NewRequest extends Request {
+    user: IUser;
+}

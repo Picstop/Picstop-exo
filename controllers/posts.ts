@@ -1,12 +1,12 @@
 import * as mongoose from 'mongoose';
 
 /* eslint-disable class-methods-use-this */
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 
 import { loggers } from 'winston';
 import * as AWS from 'aws-sdk';
 import Post from '../models/post';
-import { Post as PostType } from '../types/types';
+import { Post as PostType, NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import { client } from '../core/redis';
@@ -48,7 +48,7 @@ export default class PostController {
         if (caption) post.caption = caption;
 
         return Post.create(post).exec()
-            .then((result: any) => this.getUpload(files, authorId, result.id)
+            .then((result: any) => this.getUpload(files, authorId, result._id)
                 .then((url: Array<string>) => res.status(201).json({
                     success: true,
                     message: {
@@ -70,7 +70,7 @@ export default class PostController {
         return new Promise((resolve, reject) => {
             const params = {
                 Bucket: s3Bucket,
-                Prefix: `${post.authorId}/${post.id}`,
+                Prefix: `${post.authorId}/${post._id}`,
             };
             s3.listObjectsV2(params, async (err, data) => {
                 if (err) return reject(err);
@@ -148,7 +148,7 @@ export default class PostController {
             });
     }
 
-    async updatePostCaption(req: Request, res: Response, next: NextFunction) {
+    async updatePostCaption(req: Request, res: Response) {
         const { caption, postId } = req.body;
 
         return Post.findByIdAndUpdate({ _id: postId }, { caption }).exec()

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { NextFunction, Request, Response } from 'express';
-
+import { NextFunction, Response } from 'express';
+import { NewRequest as Request } from '../types/types';
 import Comment from '../models/comment';
 import initLogger from '../core/logger';
 
@@ -29,7 +29,10 @@ export default class CommentMiddleware {
                     .status(400)
                     .json({ success: false, message: 'Comment was not found' });
             }
-            throw e;
+            logger.info(`Error finding comment ${id} with error ${e}`);
+            return res
+                .status(500)
+                .json({ success: false, message: e });
         }
 
         // Note: use .equals instead of ==
