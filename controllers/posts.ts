@@ -92,7 +92,9 @@ export default class PostController {
 
     getPost(req: Request, res: Response) {
         const { id } = req.params;
-        Post.findById(id).exec()
+        Post.findById(id)
+            .orFail(new Error('Post not found!'))
+            .exec()
             .then((result) => {
                 this.getDownload(result)
                     .then((urls) => res.status(200).json({
@@ -115,7 +117,9 @@ export default class PostController {
 
     getUserPosts(req: Request, res: Response) {
         const { userId } = req.body;
-        Post.find({ authorId: userId }).exec()
+        Post.find({ authorId: userId })
+            .orFail(new Error('Post not found!'))
+            .exec()
             .then(async (result) => {
                 const orderPromises = result.map((i) => this.getDownload(i));
                 return Promise.all(orderPromises)
@@ -141,7 +145,9 @@ export default class PostController {
     deletePost(req: Request, res: Response) {
         const { postId } = req.query;
 
-        Post.findByIdAndDelete(postId).exec()
+        Post.findByIdAndDelete(postId)
+            .orFail(new Error('Post not found!'))
+            .exec()
             .then((result) => res.status(200).json({ success: true, message: `Successfully deleted post with result: ${result}` }))
             .catch((err) => {
                 logger.error(`Error when deleting a post with postId ${postId}: ${err}`);
@@ -152,7 +158,9 @@ export default class PostController {
     async updatePostCaption(req: Request, res: Response) {
         const { caption, postId } = req.body;
 
-        return Post.findByIdAndUpdate({ _id: postId }, { caption }).exec()
+        return Post.findByIdAndUpdate({ _id: postId }, { caption })
+            .orFail(new Error('Post not found!'))
+            .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error when updating post ${postId}: ${err}`);
@@ -165,7 +173,9 @@ export default class PostController {
         const getStr = `SeenPosts:${userId}`;
         const PostList = await client.get(getStr).split(',') || [];
 
-        User.findById(userId).exec()
+        User.findById(userId)
+            .orFail(new Error('User not found!'))
+            .exec()
             .then((usr) => Post.find({
                 _id: {
                     $ne: {
