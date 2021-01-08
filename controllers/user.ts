@@ -65,7 +65,7 @@ export default class UserController {
         const { username } = req.params;
         User.findOne({ username }).exec()
             .then((user: IUser) => res.status(200).json({ success: true, message: user })).catch((err: Error) => {
-                logger.error(`Error getting user by id: ${id} with error: ${err}`);
+                logger.error(`Error getting user by username: ${username} with error: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
