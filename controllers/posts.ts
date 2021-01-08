@@ -109,7 +109,7 @@ export default class PostController {
                 authorId: {
                     $in: usr.following
                 }
-            }).limit(20))
+            }).sort({date: 'descending'}).limit(20))
             .then(posts => new Promise((resolve, reject) => {
                 posts.forEach(p => PostList.push(p['_id']))
                 client.setex(getStr, 600, PostList.toString())
