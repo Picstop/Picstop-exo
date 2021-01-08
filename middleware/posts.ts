@@ -21,7 +21,9 @@ export default class PostMiddleware {
         // TODO: #8 add this logging to the controller and use the controller method here instead
         let post;
         try {
-            post = await Post.findById(id).exec();
+            post = await Post.findById(id)
+                .orFail(new Error('Post not found!'))
+                .exec();
         } catch (e) {
             if (e instanceof mongoose.Error.DocumentNotFoundError) {
                 logger.info(`Document with id ${id} not found.`);
@@ -36,12 +38,10 @@ export default class PostMiddleware {
         }
 
         // Note: use .equals instead of ==
-        if (post.authorId.equals(currUserId)) {
-            next();
-        } else {
-            return res
-                .status(500)
-                .json({ success: false, message: 'Author id does not match. Access forbidden.' });
-        }
+        if (post.authorId.equals(currUserId)) { return next(); }
+
+        return res
+            .status(500)
+            .json({ success: false, message: 'Author id does not match. Access forbidden.' });
     }
 }
