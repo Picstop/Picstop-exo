@@ -7,33 +7,33 @@ import initLogger from '../core/logger';
 import { IUser, comparePasswordFunction } from '../types/types';
 
 const logger = initLogger('UserModel');
-const passwordRegex = /^(?=.[A-Za-z])(?=.\d)[A-Za-z\d]*$/
+const passwordRegex = /^(?=.[A-Za-z])(?=.\d)[A-Za-z\d]*$/;
 
 const UserSchema = new Schema({
     email: {
         type: String,
-        required: [true, "No email provided"],
-        unique: [true, "The email you provided was not unique"],
+        required: [true, 'No email provided'],
+        unique: [true, 'The email you provided was not unique'],
         match: [
-          /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/,
-          "The email you provided was not correctly typed",
+            /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/,
+            'The email you provided was not correctly typed',
         ],
     },
     username: {
         type: String,
-        required: [true, "Username is required"],
-        unique: [true, "Username already exists"],
-        minlength: [3, "Username must be at least  characters"],
-        maxlength: [18, "Username cannot be more than 18 characters"],
-        match:[
+        required: [true, 'Username is required'],
+        unique: [true, 'Username already exists'],
+        minlength: [3, 'Username must be at least  characters'],
+        maxlength: [18, 'Username cannot be more than 18 characters'],
+        match: [
             /^[a-zA-Z0-9_.]*$/,
-            "Username is improperly formatted(must be only characters a-z,0-9,period and underscore)"
+            'Username is improperly formatted(must be only characters a-z,0-9,period and underscore)',
         ],
     },
     name: {
         type: String,
-        maxlength: [40, "Name has a maximum length of 40 characters"],
-        trim: true
+        maxlength: [40, 'Name has a maximum length of 40 characters'],
+        trim: true,
     },
     password: {
         type: String,
@@ -41,44 +41,48 @@ const UserSchema = new Schema({
         minlength: [6, 'Password length must be at least 6 characters'],
         maxlength: [50, 'Password has a maximum length of 50 characters'],
         validate: {
-            validator: function (v) {
-            return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]*$/.test(v);
+            validator(v) {
+                return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]*$/.test(v);
             },
-            message: 'Password must contain at least one upper case character, one lower case character, and one number'
-            },
+            message: 'Password must contain at least one upper case character, one lower case character, and one number',
+        },
         select: false,
-        trim: true
+        trim: true,
     },
     followers: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     }],
     following: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     }],
     followerRequests: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     }],
     private: {
         type: Boolean,
-        default: false
+        default: false,
     },
     blocked: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
     }],
     bio: {
         type: String,
-        maxlength: [150, 'Bio cannot exceed 150 characters']
+        maxlength: [150, 'Bio cannot exceed 150 characters'],
     },
     resetPasswordToken: {
-        type: String
+        type: String,
     },
     resetPasswordExpires: {
-        type: Date
-    }
+        type: Date,
+    },
+    savedLocations: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Location',
+    }],
 
 },
 {

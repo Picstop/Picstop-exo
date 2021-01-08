@@ -11,7 +11,7 @@ export default class locationMiddleware {
         Location.find({ geoLocation: { $near: { $maxDistance: 10, $geometry: { type: 'Point', coordinates: [long, lat] } } } }).exec()
             .then((locations) => {
                 if (locations.length !== 0) {
-                    return res.status(406).json({ success: false, message: 'There is a pre-existing location within 10 meters of your location.' });
+                    return res.status(406).json({ success: false, message: locations });
                 }
                 next();
             }).catch((error) => res.status(500).json({ success: false, message: 'Error checking proximity', data: error }));

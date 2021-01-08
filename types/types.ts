@@ -18,6 +18,7 @@ export type IUser = Document & {
   private: boolean;
   blocked: Array<mongoose.Schema.Types.ObjectId>;
   bio: string;
+  savedLocations: Array<mongoose.Schema.Types.ObjectId>;
 
   comparePassword: comparePasswordFunction;
 };
