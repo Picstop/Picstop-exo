@@ -23,14 +23,15 @@
         "max-len": ["error", { "code": 200 }],
         "object-curly-spacing": ["error", "always"],
         "no-console": "off",
-        "allowForLoopAfterthoughts": true,
+        "allowForLoopAfterthoughts": "error",
         "import/extensions": [
             "error",
             "ignorePackages",
             {
                 "ts": "never"
             }
-        ]
+        ],
+        "class-methods-use-this": "off" 
     }
    
 }
