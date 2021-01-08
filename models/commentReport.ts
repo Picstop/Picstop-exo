@@ -3,23 +3,22 @@ import mongoose, { Schema } from 'mongoose';
 import { CommentReport } from '../types/types';
 
 const commentReportSchema = new Schema({
-    reason: { 
+    reason: {
         type: 'string',
-        required: [true, 'Reason is required']
+        required: [true, 'Reason is required'],
     },
-   reportedBy: {
+    reportedBy: {
 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'Report author ID is required']
+        required: [true, 'Report author ID is required'],
 
     },
     comment: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment',
-        required: [true, 'Comment ID is required']
-    }
-       
+        required: [true, 'Comment ID is required'],
+    },
 
 },
 {

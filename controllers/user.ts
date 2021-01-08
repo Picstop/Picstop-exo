@@ -1,11 +1,9 @@
 import { NextFunction, Response } from 'express';
-import { IVerifyOptions } from 'passport-local';
 import passport from 'passport';
 
 import async from 'async';
 import crypto from 'crypto';
 import aws from 'aws-sdk';
-import bcrypt from 'bcrypt';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
@@ -47,9 +45,9 @@ export default class UserController {
                     logger.error(`User doesn't exist: ${err}`);
                     return res.status(400).json({ success: false, message: 'User doesn\'t exist' });
                 }
-                req.logIn(user, (err) => {
-                    if (err) {
-                        logger.error(`Error when logging a user in: ${err}`);
+                req.logIn(user, (error) => {
+                    if (error) {
+                        logger.error(`Error when logging a user in: ${error}`);
                         return res.status(500).json({ success: false, message: 'Login error' });
                     }
                     return res.status(200).json({ success: true, message: 'Logged in' });
