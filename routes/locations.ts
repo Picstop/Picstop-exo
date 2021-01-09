@@ -15,4 +15,6 @@ router.post('/location', validateLocation, checkProximity, async (req: Request, 
 
 router.get('/location', validateLocInput, async (req: Request, res: Response) => locations.findNearby(req, res));
 
+router.get('/posts/:id', async (req: Request, res: Response) => locations.getExamplePics(req, res));
+
 export default router;

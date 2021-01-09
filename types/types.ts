@@ -23,15 +23,6 @@ export type IUser = Document & {
   comparePassword: comparePasswordFunction;
 };
 
-export type Post = Document & {
-  authorId: mongoose.Schema.Types.ObjectId;
-  image: string;
-  caption: string;
-  location: mongoose.Schema.Types.ObjectId;
-  likes: Array<mongoose.Schema.Types.ObjectId>;
-  comments: Array<mongoose.Schema.Types.ObjectId>;
-};
-
 export type Comment = Document & {
   postId: mongoose.Schema.Types.ObjectId;
   comment: string;
@@ -42,8 +33,17 @@ export type Comment = Document & {
 export type Location = Document & {
   geoLocation: any;
   name: string;
-  author: string;
+  author: mongoose.Schema.Types.ObjectId;
   isOfficial: boolean;
+};
+
+export type Post = Document & {
+  authorId: mongoose.Schema.Types.ObjectId ;
+  image: string;
+  caption: string;
+  location: mongoose.Schema.Types.ObjectId;
+  likes: Array<mongoose.Schema.Types.ObjectId>;
+  comments: Array<mongoose.Schema.Types.ObjectId>;
 };
 
 export type UserReport = Document & {

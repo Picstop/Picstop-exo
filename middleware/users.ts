@@ -3,6 +3,7 @@ import { NextFunction, Response } from 'express';
 import User from '../models/user';
 import initLogger from '../core/logger';
 import { NewRequest as Request } from '../types/types';
+import Location from '../models/location';
 
 export default class UserMiddleware {
     checkFields(req: Request, res: Response, next: NextFunction) {
@@ -33,15 +34,20 @@ export default class UserMiddleware {
             if (!user.private) { return next(); }
 
             if (!follows) {
+                const locations = await Location.find({ author: user._id });
                 return res.status(200).json({
                     success: true,
                     private: true,
                     message: {
-                        _id: user._id,
-                        followers: user.followers.length,
-                        following: user.following.length,
-                        name: user.name,
-                        bio: user.bio,
+                        user: {
+                            _id: user._id,
+                            followers: user.followers.length,
+                            following: user.following.length,
+                            name: user.name,
+                            bio: user.bio,
+                        },
+                        locations: locations.length,
+
                     },
                 });
             }

@@ -7,6 +7,7 @@ import aws from 'aws-sdk';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
+import Location from '../models/location';
 
 const logger = initLogger('ControllerUser');
 const SES = new aws.SES({
@@ -63,14 +64,17 @@ export default class UserController {
 
     async getUser(req: Request, res: Response) {
         const { username } = req.params;
-        User.findOne({ username })
-            .orFail(new Error('User not found!'))
-            .exec()
-            .then((user: IUser) => res.status(200).json({ success: true, message: user }))
-            .catch((err: Error) => {
-                logger.error(`Error getting user by username: ${username} with error: ${err}`);
-                return res.status(500).json({ success: false, message: err.message });
-            });
+        try {
+            const user = await User.findOne({ username })
+                .orFail(new Error('User not found!'))
+                .exec();
+
+            const locations = await Location.find({ author: user._id }).exec();
+            return res.status(200).json({ success: true, message: { user, locations } });
+        } catch (error) {
+            logger.error(`Error getting user by username: ${username} with error: ${error}`);
+            return res.status(500).json({ success: false, message: error.message });
+        }
     }
 
     async followUser(req: Request, res: Response) {

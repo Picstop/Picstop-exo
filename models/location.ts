@@ -13,8 +13,8 @@ const locationSchema = new Schema(
             coordinates: [],
         },
         author: {
-            type: String,
-            default: 'Picstop',
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
         },
         isOfficial: {
             type: Boolean,
