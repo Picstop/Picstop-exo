@@ -14,7 +14,7 @@ export default class PostMiddleware {
      * @param {express.NextFunction} next The next function to call if this one passes
      */
     static async verifyAuthor(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.body;
+        const { id } = req.params;
         const currUserId = req.user._id;
 
         // Verify first that this post exists in the database
@@ -37,5 +37,33 @@ export default class PostMiddleware {
         return res
             .status(500)
             .json({ success: false, message: 'Author id does not match. Access forbidden.' });
+    }
+
+    static async checkIfAlreadyLiked(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.params;
+        try {
+            const post = await Post.findById(id)
+                .orFail(new Error('Post not found'))
+                .exec();
+            const liked = post.likes.some((user) => `${user}` == (req.user._id));
+            if (!liked) { return next(); }
+            return res.status(400).json({ success: false, message: 'Already liked post' });
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    static async checkIfAlreadyUnliked(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.params;
+        try {
+            const post = await Post.findById(id)
+                .orFail(new Error('Post not found'))
+                .exec();
+            const liked = post.likes.some((user) => `${user}` == (req.user._id));
+            if (!liked) { return res.status(400).json({ success: false, message: 'Already unliked post' }); }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
     }
 }

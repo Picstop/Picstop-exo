@@ -28,7 +28,7 @@ export default class CommentController {
     }
 
     getComment(req: Request, res: Response) {
-        const { id } = req.query;
+        const { id } = req.params;
         return Comment.findById(id)
             .orFail(new Error('Comment not found'))
             .exec()
@@ -40,9 +40,9 @@ export default class CommentController {
     }
 
     editComment(req: Request, res: Response) {
-        const { id } = req.query;
+        const { id } = req.params;
         const { comment } = req.body;
-        return Comment.findByIdAndUpdate(id, { comment })
+        return Comment.findByIdAndUpdate(id, { comment }, { new: true })
             .orFail(new Error('Comment not found!'))
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
@@ -53,9 +53,9 @@ export default class CommentController {
     }
 
     async deleteComment(req: Request, res: Response) {
-        const { id } = req.query;
+        const { id } = req.params;
 
-        return Comment.findByIdAndRemove(id)
+        return Comment.findByIdAndDelete(id)
             .orFail(new Error('Comment not found!'))
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
@@ -66,13 +66,25 @@ export default class CommentController {
     }
 
     likeComment(req: Request, res: Response) {
-        const { commentId } = req.query;
-        return Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user._id } })
+        const { id } = req.params;
+        return Comment.findByIdAndUpdate(id, { $push: { likes: req.user._id } }, { new: true })
             .orFail(new Error('Comment not found!'))
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
-                logger.error(`Error while liking a comment ${commentId}: ${err}`);
+                logger.error(`Error while liking a comment ${id}: ${err}`);
+                return res.status(500).json({ success: false, message: err.message });
+            });
+    }
+
+    unlikeComment(req: Request, res: Response) {
+        const { id } = req.params;
+        return Comment.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
+            .orFail(new Error('Comment not found!'))
+            .exec()
+            .then((result) => res.status(200).json({ success: true, message: result }))
+            .catch((err) => {
+                logger.error(`Error while liking a comment ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }

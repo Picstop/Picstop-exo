@@ -6,7 +6,7 @@ const PostSchema = new Schema({
     authorId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'User'
+        ref: 'User',
     },
     caption: {
         type: String,
@@ -14,7 +14,7 @@ const PostSchema = new Schema({
     location: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'Location'
+        ref: 'Location',
     },
     likes: [{
         type: mongoose.Schema.Types.ObjectId,

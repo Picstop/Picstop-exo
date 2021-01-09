@@ -40,8 +40,9 @@ export default class PostController {
 
     createPost(req: Request, res: Response) {
         const {
-            authorId, caption, location, files,
+            caption, location, files,
         } = req.body;
+        const authorId = req.user._id;
         const post = removeNullUndef({
             authorId,
             location,
@@ -143,27 +144,28 @@ export default class PostController {
     }
 
     deletePost(req: Request, res: Response) {
-        const { postId } = req.query;
+        const { id } = req.params;
 
-        Post.findByIdAndDelete(postId)
+        Post.findByIdAndDelete(id)
             .orFail(new Error('Post not found!'))
             .exec()
             .then((result) => res.status(200).json({ success: true, message: `Successfully deleted post with result: ${result}` }))
             .catch((err) => {
-                logger.error(`Error when deleting a post with postId ${postId}: ${err}`);
+                logger.error(`Error when deleting a post with postId ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
 
     async updatePostCaption(req: Request, res: Response) {
-        const { caption, postId } = req.body;
+        const { caption } = req.body;
+        const { id } = req.params;
 
-        return Post.findByIdAndUpdate({ _id: postId }, { caption })
+        return Post.findByIdAndUpdate({ _id: id }, { caption }, { new: true })
             .orFail(new Error('Post not found!'))
             .exec()
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
-                logger.error(`Error when updating post ${postId}: ${err}`);
+                logger.error(`Error when updating post ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
@@ -209,6 +211,31 @@ export default class PostController {
             })
             .catch((err) => {
                 logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
+                return res.status(500).json({ success: false, message: err.message });
+            });
+    }
+
+    async likePost(req: Request, res: Response) {
+        const { id } = req.params;
+        return Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } }, { new: true })
+            .orFail(new Error('Post not found!'))
+            .exec()
+            .then((result) => res.status(200).json({ success: true, message: result }))
+            .catch((err) => {
+                logger.error(`Error while liking a Post ${id}: ${err}`);
+                return res.status(500).json({ success: false, message: err.message });
+            });
+    }
+
+    async unlikePost(req: Request, res: Response) {
+        const { id } = req.params;
+        console.log(id);
+        return Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
+            .orFail(new Error('Post not found!'))
+            .exec()
+            .then((result) => res.status(200).json({ success: true, message: result }))
+            .catch((err) => {
+                logger.error(`Error while liking a post ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
