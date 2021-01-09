@@ -111,7 +111,7 @@ export default class PostController {
             })
             .catch((err) => {
                 logger.error(`Error when getting a post by id ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
@@ -138,7 +138,7 @@ export default class PostController {
             })
             .catch((err) => {
                 logger.error(`Error when finding posts with userId ${userId}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
@@ -151,7 +151,7 @@ export default class PostController {
             .then((result) => res.status(200).json({ success: true, message: `Successfully deleted post with result: ${result}` }))
             .catch((err) => {
                 logger.error(`Error when deleting a post with postId ${postId}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
@@ -164,7 +164,7 @@ export default class PostController {
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error when updating post ${postId}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
@@ -209,7 +209,7 @@ export default class PostController {
             })
             .catch((err) => {
                 logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 }

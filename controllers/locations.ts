@@ -33,7 +33,6 @@ export default class LocationController {
     async findNearby(req: Request, res: Response) {
         const { lat, long, maxDistance } = req.body;
         return Location.find({ geoLocation: { $near: { $maxDistance: maxDistance, $geometry: { type: 'Point', coordinates: [long, lat] } } } })
-            .orFail(new Error('Location not found!'))
             .exec()
             .then((locations) => res.status(200).json({ success: true, message: locations }))
             .catch((error) => res.status(500).json({ success: false, message: 'Error checking proximity', data: error }));

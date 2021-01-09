@@ -8,7 +8,7 @@ import initLogger from '../core/logger';
 const logger = initLogger('ControllerComments');
 
 export default class CommentController {
-    createComment(req: Request, res: Response, next: NextFunction) {
+    createComment(req: Request, res: Response) {
         const { postId, comment } = req.body;
         const authorId = req.user._id;
 
@@ -27,7 +27,7 @@ export default class CommentController {
             });
     }
 
-    getComment(req: Request, res: Response, next: NextFunction) {
+    getComment(req: Request, res: Response) {
         const { id } = req.query;
         return Comment.findById(id)
             .orFail(new Error('Comment not found'))
@@ -35,11 +35,11 @@ export default class CommentController {
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error while getting a comment ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
-    editComment(req: Request, res: Response, next: NextFunction) {
+    editComment(req: Request, res: Response) {
         const { id } = req.query;
         const { comment } = req.body;
         return Comment.findByIdAndUpdate(id, { comment })
@@ -48,21 +48,12 @@ export default class CommentController {
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error when editing a comment ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
-    async deleteComment(req: Request, res: Response, next: NextFunction) {
+    async deleteComment(req: Request, res: Response) {
         const { id } = req.query;
-        const commentAuthor = await Comment.findById(id).orFail(new Error('Comment not found!')).exec();
-
-        if (commentAuthor._id !== req.user._id) {
-            // TODO: add a custom error and a try/catch
-            logger.error(`Error when deleting a comment ${id}: User is not author of post`);
-            return res
-                .status(401)
-                .json({ success: false, message: 'User is not author of post.' });
-        }
 
         return Comment.findByIdAndRemove(id)
             .orFail(new Error('Comment not found!'))
@@ -70,11 +61,11 @@ export default class CommentController {
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error while removing a comment ${id}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 
-    likeComment(req: Request, res: Response, next: NextFunction) {
+    likeComment(req: Request, res: Response) {
         const { commentId } = req.query;
         return Comment.findByIdAndUpdate(commentId, { $push: { likes: req.user._id } })
             .orFail(new Error('Comment not found!'))
@@ -82,7 +73,7 @@ export default class CommentController {
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error while liking a comment ${commentId}: ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 }

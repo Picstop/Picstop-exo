@@ -62,13 +62,13 @@ export default class UserController {
     }
 
     async getUser(req: Request, res: Response) {
-        const { id } = req.params;
-        User.findById(id)
+        const { username } = req.params;
+        User.findOne({ username })
             .orFail(new Error('User not found!'))
             .exec()
             .then((user: IUser) => res.status(200).json({ success: true, message: user }))
             .catch((err: Error) => {
-                logger.error(`Error getting user by id: ${id} with error: ${err}`);
+                logger.error(`Error getting user by username: ${username} with error: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }
@@ -202,7 +202,7 @@ export default class UserController {
                 await User.updateMany({ _id: { $in: req.user.followerRequests } }, { $push: { following: req.user._id } })
                     .orFail(new Error('User not found!'))
                     .exec();
-                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: req.user.followerRequests }, $set: { followerRequests: [] } })
+                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: { $each: req.user.followerRequests } }, $set: { followerRequests: [] } })
                     .orFail(new Error('User not found!'))
                     .exec();
                 return res.status(200).json({ success: true, message: 'Succesfully updated privacy setting and added all follower requests as followers' });

@@ -1,3 +1,4 @@
+/* eslint-disable import/prefer-default-export */
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Request, Response, NextFunction } from 'express';
@@ -22,37 +23,14 @@ passport.use(
         User.findOne({ username }).select('+password')
             .orFail(new Error('User not found!'))
             .exec()
-            .then((user: IUser) => {
-                if (!user) {
-                    return done(null, false, { message: `Username ${username} not found.` });
-                }
-
-                return user.comparePassword(password, user.password, (err: Error, isMatch: boolean) => {
-                    if (err) { return done(err); }
-                    if (isMatch) {
-                        return done(undefined, user);
-                    }
-                    return done(undefined, false, { message: 'Invalid username or password.' });
-                });
-            })
-            .catch((err: Error) => done(err));
-
-        /* User.findOne({ username: username }, async (err: Error, user: any) => {
-
-            if (err) { return done(err); }
-
-            if (!user) {
-                return done(null, false, { message: `Username ${username} not found.` });
-            }
-
-            user.comparePassword(password, user.password, (err: Error, isMatch: boolean) => {
+            .then((user: IUser) => user.comparePassword(password, user.password, (err: Error, isMatch: boolean) => {
                 if (err) { return done(err); }
                 if (isMatch) {
                     return done(undefined, user);
                 }
-                return done(undefined, false, { message: "Invalid username or password." });
-            });
-        }); */
+                return done(undefined, false, { message: 'Invalid username or password.' });
+            }))
+            .catch((err: Error) => done(err));
     }),
 );
 

@@ -19,131 +19,168 @@ export default class UserMiddleware {
     }
 
     async allowedToViewProfile(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.params;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
-        const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
-        const outgoingBlocks = await req.user.blocked.some((users) => `${users}` === user._id);
-        if (incomingBlocks === true || outgoingBlocks === true) {
-            return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
-        }
-        if (!user.private) { return next(); }
+        const { username } = req.params;
+        try {
+            const user = await User.findOne({ username })
+                .orFail(new Error('User not found!'))
+                .exec();
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
+            const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
+            const outgoingBlocks = await req.user.blocked.some((users) => `${users}` === user._id);
+            if (incomingBlocks === true || outgoingBlocks === true) {
+                return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
+            }
+            if (!user.private) { return next(); }
 
-        if (!follows) {
-            return res.status(200).json({
-                success: true,
-                private: true,
-                message: {
-                    _id: user._id,
-                    followers: user.followers.length,
-                    following: user.following.length,
-                    name: user.name,
-                    bio: user.bio,
-                },
-            });
+            if (!follows) {
+                return res.status(200).json({
+                    success: true,
+                    private: true,
+                    message: {
+                        _id: user._id,
+                        followers: user.followers.length,
+                        following: user.following.length,
+                        name: user.name,
+                        bio: user.bio,
+                    },
+                });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     // isBlocked
     async isBlocked(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
-        const outgoingBlocks = await req.user.blocked.some((users) => `${users}` === user._id);
-        if (incomingBlocks === true || outgoingBlocks === true) {
-            return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
+            const outgoingBlocks = await req.user.blocked.some((users) => `${users}` === user._id);
+            if (incomingBlocks === true || outgoingBlocks === true) {
+                return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     async alreadyBlocked(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const outgoingBlocks = await req.user.blocked.some((users) => `${users}` === user._id);
-        if (outgoingBlocks === true) {
-            return res.status(401).json({ success: false, message: 'User already blocked' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const outgoingBlocks = await req.user.blocked.some((users) => `${users}` === user._id);
+            if (outgoingBlocks === true) {
+                return res.status(401).json({ success: false, message: 'User already blocked' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     async alreadyFollowedOrRequested(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
-        const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
-        if (follows === true || requested === true) {
-            return res.status(401).json({ success: false, message: 'User already requested or follows user' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
+            const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
+            if (follows === true || requested === true) {
+                return res.status(401).json({ success: false, message: 'User already requested or follows user' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     // check if already unblocked
     async alreadyUnblocked(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const blocked = req.user.blocked.some((users) => `${users}` === user._id);
 
-        if (!blocked) {
-            return res.status(400).json({ success: false, message: 'User is already unblocked' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const blocked = req.user.blocked.some((users) => `${users}` === user._id);
+
+            if (!blocked) {
+                return res.status(400).json({ success: false, message: 'User is already unblocked' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     // check if already unfollowed
     async alreadyUnfollowed(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
-        if (!follows) {
-            return res.status(400).json({ success: false, message: 'User is already unfollowed' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
+            if (!follows) {
+                return res.status(400).json({ success: false, message: 'User is already unfollowed' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     // check if follow request exists
     async alreadyRequestedToFollow(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id).exec();
-        const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
-        if (!requested) { return next(); }
-        return res.status(400).json({ success: false, message: 'Already requested to follow' });
+        try {
+            const user = await User.findById(id).exec();
+            const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
+            if (!requested) { return next(); }
+            return res.status(400).json({ success: false, message: 'Already requested to follow' });
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
     }
 
     async didntRequestToFollow(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
-        if (!requested) {
-            return res.status(400).json({ success: false, message: 'Follow request does not exist.' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
+            if (!requested) {
+                return res.status(400).json({ success: false, message: 'Follow request does not exist.' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     async followRequestExists(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        const user = await User.findById(id)
-            .orFail(new Error('User not found!'))
-            .exec();
-        const requested = req.user.followerRequests.some((follower) => `${follower}` === (user.id));
-        if (!requested) {
-            return res.status(400).json({ success: false, message: 'Follow request does not exist.' });
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const requested = req.user.followerRequests.some((follower) => `${follower}` === (user.id));
+            if (!requested) {
+                return res.status(400).json({ success: false, message: 'Follow request does not exist.' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
         }
-        return next();
     }
 
     async notThemself(req: Request, res: Response, next: NextFunction) {

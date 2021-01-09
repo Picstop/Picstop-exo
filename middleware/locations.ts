@@ -9,7 +9,6 @@ export default class locationMiddleware {
         const { long, lat } = req.body;
 
         Location.find({ geoLocation: { $near: { $maxDistance: 10, $geometry: { type: 'Point', coordinates: [long, lat] } } } })
-            .orFail(new Error('Location not found!'))
             .exec()
             .then((locations) => {
                 if (locations.length !== 0) {

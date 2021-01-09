@@ -23,16 +23,10 @@ export default class CommentMiddleware {
         try {
             comment = await Comment.findById(id).orFail(new Error('Comment not found!')).exec();
         } catch (e) {
-            if (e instanceof mongoose.Error.DocumentNotFoundError) {
-                logger.info(`Document with id ${id} not found.`);
-                return res
-                    .status(400)
-                    .json({ success: false, message: 'Comment was not found' });
-            }
             logger.info(`Error finding comment ${id} with error ${e}`);
             return res
                 .status(500)
-                .json({ success: false, message: e });
+                .json({ success: false, message: e.message });
         }
 
         // Note: use .equals instead of ==

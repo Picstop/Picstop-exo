@@ -23,8 +23,7 @@ router.post('/logout',
 
 router.get('/get/:username',
     isAuthenticated,
-    userMiddleware.allowedToViewProfile,
-    (req: Request, res) => userController.getUser(req, res));
+    userMiddleware.allowedToViewProfile, (req: Request, res) => userController.getUser(req, res));
 
 router.get('/', isAuthenticated, (req, res) => {
     if (!req.user) {

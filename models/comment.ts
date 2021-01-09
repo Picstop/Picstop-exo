@@ -10,15 +10,14 @@ const CommentSchema = new Schema(
         comment: {
             type: String,
         },
-        likes: {
-            type: Array,
-            required: true,
-            default: [],
-        },
+        likes: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
         authorId: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            ref: 'User'
+            ref: 'User',
         },
     },
     {
