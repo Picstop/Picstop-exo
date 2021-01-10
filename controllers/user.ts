@@ -8,6 +8,7 @@ import initLogger from '../core/logger';
 import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
 import Location from '../models/location';
+import Post from '../models/post';
 
 const logger = initLogger('ControllerUser');
 const SES = new aws.SES({
@@ -69,10 +70,39 @@ export default class UserController {
                 .orFail(new Error('User not found!'))
                 .exec();
 
-            const locations = await Location.find({ author: user._id }).exec();
-            return res.status(200).json({ success: true, message: { user, locations } });
+            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec();
+            const userLocationSet = new Set(locations);
+            const userLocations = [...userLocationSet];
+            return res.status(200).json({ success: true, message: { user, userLocations } });
         } catch (error) {
             logger.error(`Error getting user by username: ${username} with error: ${error}`);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async getUsersByArray(req: Request, res: Response) {
+        const { users } = req.body;
+        User.find({ _id: { $in: users } }).exec()
+            .then((result) => res.status(200).json({ success: true, message: result }))
+            .catch((error) => {
+                logger.error(`Error getting users by array of ids ${users} with error ${error}`);
+                res.status(500).json({ success: false, message: error.message });
+            });
+    }
+
+    async getUserById(req: Request, res: Response) {
+        const { id } = req.params;
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+
+            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec();
+            const userLocationSet = new Set(locations);
+            const userLocations = [...userLocationSet];
+            return res.status(200).json({ success: true, message: { user, userLocations } });
+        } catch (error) {
+            logger.error(`Error getting user by id: ${id} with error: ${error}`);
             return res.status(500).json({ success: false, message: error.message });
         }
     }

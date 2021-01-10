@@ -4,11 +4,12 @@ import { NextFunction, Response } from 'express';
 import Comment from '../models/comment';
 import { Comment as CommentType, NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
+import Post from '../models/post';
 
 const logger = initLogger('ControllerComments');
 
 export default class CommentController {
-    createComment(req: Request, res: Response) {
+    async createComment(req: Request, res: Response) {
         const { postId, comment } = req.body;
         const authorId = req.user._id;
 
@@ -17,14 +18,14 @@ export default class CommentController {
             comment,
             authorId,
         });
-
-        return newComment
-            .save()
-            .then((result: any) => res.status(201).json({ success: true, message: result }))
-            .catch((err: any) => {
-                logger.error(`Error while creating a new comment: ${err}`);
-                return res.status(500).json({ success: false, message: err.message });
-            });
+        try {
+            await newComment.save();
+            await Post.findByIdAndUpdate(postId, { $set: { comments: newComment._id } });
+            return res.status(201).json({ success: true, message: newComment });
+        } catch (error) {
+            logger.error(`Error while creating a new comment: ${error}`);
+            return res.status(500).json({ success: false, message: error.message });
+        }
     }
 
     getComment(req: Request, res: Response) {

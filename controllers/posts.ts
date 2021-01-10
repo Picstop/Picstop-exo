@@ -95,6 +95,7 @@ export default class PostController {
         const { id } = req.params;
         Post.findById(id)
             .orFail(new Error('Post not found!'))
+            .populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }])
             .exec()
             .then((result) => {
                 this.getDownload(result)

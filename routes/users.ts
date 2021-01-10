@@ -25,6 +25,10 @@ router.get('/get/:username',
     isAuthenticated,
     userMiddleware.allowedToViewProfile, (req: Request, res) => userController.getUser(req, res));
 
+router.get('/getById/:id', isAuthenticated, userMiddleware.allowedToViewProfile, (req: Request, res) => userController.getUserById(req, res));
+
+router.get('/getByArray', isAuthenticated, (req: Request, res) => userController.getUsersByArray(req, res));
+
 router.get('/', isAuthenticated, (req, res) => {
     if (!req.user) {
         return res.status(401).json({ success: false, message: 'Cannot get user, please login' });
