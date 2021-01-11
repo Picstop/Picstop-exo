@@ -68,26 +68,31 @@ export default class PostController {
             });
     }
 
-    async getDownload(post: any) {
+    async getDownload(postID: string) {
         return new Promise((resolve, reject) => {
-            const params = {
-                Bucket: s3Bucket,
-                Prefix: `${post.authorId}/${post._id}`,
-            };
-            s3.listObjectsV2(params, async (err, data) => {
-                if (err) return reject(err);
+            Post.findById(postID)
+                .orFail(new Error('Post not found!'))
+                .exec((err, post) => {
+                    if (err) return reject(err);
+                    const params = {
+                        Bucket: s3Bucket,
+                        Prefix: `${post.authorId}/${post._id}`,
+                    };
+                    return s3.listObjectsV2(params, async (err1, data) => {
+                        if (err1) return reject(err1);
 
-                const nl = [...Array(data.Contents.length).keys()];
+                        const nl = [...Array(data.Contents.length).keys()];
 
-                const orderPromises = nl.map((i) => s3.getSignedUrl('getObject', {
-                    Bucket: s3Bucket,
-                    Key: `${post.authorId}/${post.id}/${i}.webp`,
-                    Expires: 60,
-                }));
-                return Promise.all(orderPromises)
-                    .then((urls) => resolve(urls))
-                    .catch((err1) => reject(err1));
-            });
+                        const orderPromises = nl.map((i) => s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: `${post.authorId}/${post.id}/${i}.webp`,
+                            Expires: 60,
+                        }));
+                        return Promise.all(orderPromises)
+                            .then((urls) => resolve(urls))
+                            .catch((err2) => reject(err2));
+                    });
+                });
         });
     }
 
@@ -95,10 +100,9 @@ export default class PostController {
         const { id } = req.params;
         Post.findById(id)
             .orFail(new Error('Post not found!'))
-            .populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }])
             .exec()
             .then((result) => {
-                this.getDownload(result)
+                this.getDownload(result._id)
                     .then((urls) => res.status(200).json({
                         success: true,
                         message: {
@@ -123,7 +127,7 @@ export default class PostController {
             .orFail(new Error('Post not found!'))
             .exec()
             .then(async (result) => {
-                const orderPromises = result.map((i) => this.getDownload(i));
+                const orderPromises = result.map((i) => this.getDownload(i._id));
                 return Promise.all(orderPromises)
                     .then((urls) => res.status(200).json({
                         success: true,
@@ -196,7 +200,7 @@ export default class PostController {
                     .catch((err) => reject(err));
             }))
             .then(async (result: any) => {
-                const orderPromises = result.map((i) => this.getDownload(i));
+                const orderPromises = result.map((i) => this.getDownload(i._id));
                 return Promise.all(orderPromises)
                     .then((urls) => res.status(200).json({
                         success: true,
