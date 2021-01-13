@@ -73,6 +73,10 @@ const UserSchema = new Schema({
         type: String,
         maxlength: [150, 'Bio cannot exceed 150 characters'],
     },
+    profilePic: {
+        type: String,
+        // TODO: we should have a url for a default pfp and put it here
+    },
     resetPasswordToken: {
         type: String,
     },
