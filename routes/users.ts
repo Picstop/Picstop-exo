@@ -72,6 +72,10 @@ router.post('/request/accept',
     userMiddleware.followRequestExists,
     (req: Request, res) => userController.acceptFollowRequest(req, res));
 
+router.post('/profilePicture',
+    isAuthenticated,
+    (req: Request, res) => userController.updatePfp(req, res));
+
 router.patch('/username',
     isAuthenticated,
     (req: Request, res) => userController.updateUsername(req, res));
