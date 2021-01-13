@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 /* eslint-disable class-methods-use-this */
 import { NextFunction, Response } from 'express';
@@ -14,58 +14,61 @@ import { removeNullUndef } from '../core/helpers';
 
 const logger = initLogger('ControllerPosts');
 
+const s3Bucket = process.env.BUCKET_NAME;
 const credentials = {
     accessKeyId: process.env.AWS_ACCESS,
     secretAccessKey: process.env.AWS_SECRET,
 };
 AWS.config.update({ credentials, region: 'us-east-1' });
-const s3Bucket = process.env.BUCKET_NAME;
 const s3 = new AWS.S3();
 export default class PostController {
-    async getUpload(files: number, authId: string, postId: string) {
-        return new Promise((resolve, reject) => {
-            const nl = [...Array(files).keys()];
-            const orderPromises = nl.map((i) => s3.getSignedUrl('putObject', {
-                Bucket: s3Bucket,
-                Key: `${authId}/${postId}/${i}.webp`,
-                Expires: 60,
-                ContentType: 'image/webp',
-                ACL: 'public-read',
-            }));
-            Promise.all(orderPromises)
-                .then((urls) => resolve(urls))
-                .catch((err) => reject(err));
-        });
-    }
-
-    createPost(req: Request, res: Response) {
+    async createPost(req: Request, res: Response) {
         const {
             caption, location, files,
         } = req.body;
         const authorId = req.user._id;
-        const post = removeNullUndef({
-            authorId,
-            location,
-            caption,
-        });
+        const _id = mongoose.Types.ObjectId();
+        const nl = [...Array(files).keys()];
+        const uploadPromises = nl.map((i) => s3.getSignedUrl('putObject', {
+            Bucket: s3Bucket,
+            Key: `${authorId}/${_id.toString()}/${i}.webp`,
+            Expires: 60,
+            ContentType: 'image/webp',
+            ACL: 'public-read',
+        }));
+        const downloadPromises = nl.map((i) => s3.getSignedUrl('getObject', {
+            Bucket: s3Bucket,
+            Key: `${authorId}/${_id.toString()}/${i}.webp`,
+            Expires: 60,
+        }));
+        try {
+            const urls = await Promise.all(uploadPromises);
+            const images = await Promise.all(downloadPromises);
 
-        return Post.create(post)
-            .then((result: any) => this.getUpload(files, authorId, result._id)
-                .then((url: Array<string>) => res.status(201).json({
+            const post = removeNullUndef({
+                _id,
+                authorId,
+                location,
+                caption,
+                images,
+            });
+
+            return Post.create(post)
+                .then((p) => res.status(201).json({
                     success: true,
                     message: {
-                        post: result,
-                        urls: url,
+                        post: p,
+                        uploadUrls: urls,
                     },
                 }))
                 .catch((err: any) => {
                     logger.error(`Error when saving a post ${post}: ${err}`);
                     return res.status(500).json({ success: false, message: err.message });
-                }))
-            .catch((err: any) => {
-                logger.error(`Error when saving a post ${post}: ${err}`);
-                return res.status(500).json({ success: false, message: err.message });
-            });
+                });
+        } catch (e) {
+            logger.error(`Image upload error: ${e}`);
+            return res.status(500).json({ success: false, message: e.message });
+        }
     }
 
     async getDownload(postID: string) {
