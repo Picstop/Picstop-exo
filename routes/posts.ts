@@ -21,4 +21,6 @@ router.post('/like/:id', isAuthenticated, PostMiddleware.checkIfAlreadyLiked, as
 
 router.post('/unlike/:id', isAuthenticated, PostMiddleware.checkIfAlreadyUnliked, async (req: Request, res) => Posts.unlikePost(req, res));
 
+router.get('/feed', isAuthenticated, async (req: Request, res) => Posts.getFeedSet(req, res));
+
 export default router;

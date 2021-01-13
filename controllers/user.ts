@@ -2,9 +2,12 @@ import { NextFunction, Response } from 'express';
 import passport from 'passport';
 
 import async from 'async';
+
 import crypto from 'crypto';
 import aws from 'aws-sdk';
+import * as AWS from 'aws-sdk';
 import initLogger from '../core/logger';
+// import s3 from '../core/s3';
 import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
 import Location from '../models/location';
@@ -16,6 +19,14 @@ const SES = new aws.SES({
     accessKeyId: process.env.AWS_ACCESS,
     secretAccessKey: process.env.AWS_SECRET,
 });
+
+const credentials = {
+    accessKeyId: process.env.AWS_ACCESS,
+    secretAccessKey: process.env.AWS_SECRET,
+};
+AWS.config.update({ credentials, region: 'us-east-1' });
+const s3 = new AWS.S3();
+const s3Bucket = process.env.BUCKET_NAME;
 export default class UserController {
     async postSignup(req: Request, res: Response) {
         const user = new User({
@@ -212,6 +223,35 @@ export default class UserController {
                 logger.error(`Error removing follow request to ${id} by ${req.user._id} with error: ${error}`);
                 return res.status(500).json({ success: false, message: error });
             });
+    }
+
+    async updatePfp(req: Request, res: Response) {
+        const { id } = req.body;
+        try {
+            const uploadUrl = await s3.getSignedUrl('putObject', {
+                Bucket: s3Bucket,
+                Key: `${id}/pfp.webp`,
+                Expires: 60,
+                ContentType: 'image/webp',
+                ACL: 'public-read',
+            });
+            const profilePic = await s3.getSignedUrl('getObject', { // is the put url the same as the get url?
+                Bucket: s3Bucket,
+                Key: `${id}/pfp.webp`,
+                Expires: 60,
+            });
+            return User.findByIdAndUpdate(id, { profilePic })
+                .then((usr) => res.status(200).json({
+                    user: usr,
+                    uploadUrl,
+                })).catch((error) => {
+                    logger.error(`Error making pfp for user ${id} with error: ${error}`);
+                    return res.status(500).json({ success: false, message: error.message });
+                });
+        } catch (err) {
+            logger.error(`Error making pfp for user ${id} with error: ${err}`);
+            return res.status(500).json({ success: false, message: err.message });
+        }
     }
 
     async updateUsername(req: Request, res: Response) {
