@@ -39,7 +39,6 @@ export default class PostController {
         const downloadPromises = nl.map((i) => s3.getSignedUrl('getObject', {
             Bucket: s3Bucket,
             Key: `${authorId}/${_id.toString()}/${i}.webp`,
-            Expires: 60,
         }));
         try {
             const urls = await Promise.all(uploadPromises);
@@ -71,53 +70,15 @@ export default class PostController {
         }
     }
 
-    async getDownload(postID: string) {
-        return new Promise((resolve, reject) => {
-            Post.findById(postID)
-                .orFail(new Error('Post not found!'))
-                .exec((err, post) => {
-                    if (err) return reject(err);
-                    const params = {
-                        Bucket: s3Bucket,
-                        Prefix: `${post.authorId}/${post._id}`,
-                    };
-                    return s3.listObjectsV2(params, async (err1, data) => {
-                        if (err1) return reject(err1);
-
-                        const nl = [...Array(data.Contents.length).keys()];
-
-                        const orderPromises = nl.map((i) => s3.getSignedUrl('getObject', {
-                            Bucket: s3Bucket,
-                            Key: `${post.authorId}/${post.id}/${i}.webp`,
-                            Expires: 60,
-                        }));
-                        return Promise.all(orderPromises)
-                            .then((urls) => resolve(urls))
-                            .catch((err2) => reject(err2));
-                    });
-                });
-        });
-    }
-
     getPost(req: Request, res: Response) {
         const { id } = req.params;
         Post.findById(id)
             .orFail(new Error('Post not found!'))
             .exec()
-            .then((result) => {
-                this.getDownload(result._id)
-                    .then((urls) => res.status(200).json({
-                        success: true,
-                        message: {
-                            post: result,
-                            url: urls,
-                        },
-                    }))
-                    .catch((err) => {
-                        logger.error(`Error when getting a post ${id}'s images: ${err}`);
-                        return res.status(500).json({ success: false, message: err });
-                    });
-            })
+            .then((result) => res.status(200).json({
+                success: true,
+                message: result,
+            }))
             .catch((err) => {
                 logger.error(`Error when getting a post by id ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
@@ -129,22 +90,13 @@ export default class PostController {
         Post.find({ authorId: userId })
             .orFail(new Error('Post not found!'))
             .exec()
-            .then(async (result) => {
-                const orderPromises = result.map((i) => this.getDownload(i._id));
-                return Promise.all(orderPromises)
-                    .then((urls) => res.status(200).json({
-                        success: true,
-                        message: {
-                            posts: result,
-                            count: result.length,
-                            url: urls,
-                        },
-                    }))
-                    .catch((err) => {
-                        logger.error(`Error when finding posts with userId ${userId}: ${err}`);
-                        return res.status(500).json({ success: false, message: err });
-                    });
-            })
+            .then((result) => res.status(200).json({
+                success: true,
+                message: {
+                    posts: result,
+                    count: result.length,
+                },
+            }))
             .catch((err) => {
                 logger.error(`Error when finding posts with userId ${userId}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
@@ -202,21 +154,10 @@ export default class PostController {
                     .then(() => resolve(posts))
                     .catch((err) => reject(err));
             }))
-            .then(async (result: any) => {
-                const orderPromises = result.map((i) => this.getDownload(i._id));
-                return Promise.all(orderPromises)
-                    .then((urls) => res.status(200).json({
-                        success: true,
-                        message: {
-                            posts: result,
-                            url: urls,
-                        },
-                    }))
-                    .catch((err) => {
-                        logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
-                        return res.status(500).json({ success: false, message: err });
-                    });
-            })
+            .then((result: any) => res.status(200).json({
+                success: true,
+                message: result,
+            }))
             .catch((err) => {
                 logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
