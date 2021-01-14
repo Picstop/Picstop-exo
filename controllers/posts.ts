@@ -70,44 +70,15 @@ export default class PostController {
         }
     }
 
-    async getDownload(postID: string) {
-        return new Promise((resolve, reject) => {
-            Post.findById(postID)
-                .orFail(new Error('Post not found!'))
-                .exec((err, post) => {
-                    if (err) return reject(err);
-                    const params = {
-                        Bucket: s3Bucket,
-                        Prefix: `${post.authorId}/${post._id}`,
-                    };
-                    return s3.listObjectsV2(params, async (err1, data) => {
-                        if (err1) return reject(err1);
-
-                        const nl = [...Array(data.Contents.length).keys()];
-
-                        const orderPromises = nl.map((i) => s3.getSignedUrl('getObject', {
-                            Bucket: s3Bucket,
-                            Key: `${post.authorId}/${post.id}/${i}.webp`,
-                            Expires: 60,
-                        }));
-                        return Promise.all(orderPromises)
-                            .then((urls) => resolve(urls))
-                            .catch((err2) => reject(err2));
-                    });
-                });
-        });
-    }
-
     getPost(req: Request, res: Response) {
         const { id } = req.params;
         Post.findById(id)
             .orFail(new Error('Post not found!'))
             .exec()
-            .then((result) =>
-                res.status(200).json({
-                    success: true,
-                    message: result,
-                }))
+            .then((result) => res.status(200).json({
+                success: true,
+                message: result,
+            }))
             .catch((err) => {
                 logger.error(`Error when getting a post by id ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
@@ -183,11 +154,10 @@ export default class PostController {
                     .then(() => resolve(posts))
                     .catch((err) => reject(err));
             }))
-            .then((result: any) =>
-                res.status(200).json({
-                    success: true,
-                    message: result
-                }))
+            .then((result: any) => res.status(200).json({
+                success: true,
+                message: result,
+            }))
             .catch((err) => {
                 logger.error(`Error when acquiring feed for user ${userId}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
