@@ -15,7 +15,7 @@ router.post('/signup',
     (req: Request, res) => userController.postSignup(req, res));
 
 router.post('/login',
-    (req: Request, res, next) => userController.postLogin(req, res, next));
+    (req: Request, res) => userController.postLogin(req, res));
 
 router.post('/logout',
     isAuthenticated,
