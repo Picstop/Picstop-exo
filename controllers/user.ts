@@ -1,11 +1,12 @@
 import { NextFunction, Response } from 'express';
-import passport from 'passport';
 
 import async from 'async';
 
 import crypto from 'crypto';
 import aws from 'aws-sdk';
 import * as AWS from 'aws-sdk';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import initLogger from '../core/logger';
 // import s3 from '../core/s3';
 import User from '../models/user';
@@ -42,31 +43,34 @@ export default class UserController {
             }
             return res.status(201).json({ success: true, message: 'Successfully signed up.' });
         });
-
-        passport.authenticate('local');
     }
 
-    async postLogin(req: Request, res: Response, next: NextFunction) {
-        passport.authenticate(
-            'local',
-            (err: Error, user: IUser) => {
-                if (err) {
-                    logger.error(`Error when authenticating: ${err}`);
-                    return res.status(500).json({ success: false, message: err.message });
-                }
-                if (!user) {
-                    logger.error(`User doesn't exist: ${err}`);
-                    return res.status(400).json({ success: false, message: 'User doesn\'t exist' });
-                }
-                return req.logIn(user, (error) => {
-                    if (error) {
-                        logger.error(`Error when logging a user in: ${error}`);
-                        return res.status(500).json({ success: false, message: 'Login error' });
-                    }
-                    return res.status(200).json({ success: true, message: 'Logged in' });
-                });
-            },
-        )(req, res, next);
+    async postLogin(req: Request, res: Response) {
+        const { username, password } = req.body;
+
+        User.findOne({
+            username,
+        }).select('+password')
+            .orFail(new Error('User not found!'))
+            .then((user) => bcrypt.compare(password, user.password)
+                .then((match) => {
+                    if (match) {
+                        const {
+                            email, _id,
+                        } = user;
+                        return jwt.sign({
+                            username,
+                            email,
+                            _id,
+                        }, process.env.JWT_SECRET || '$$2d##dS#', {
+                        }, (err, tk: String) => {
+                            if (err)res.status(400).json({ success: false, message: err.message });
+                            res.status(200).json({ success: true, message: tk });
+                        });
+                    } return res.status(400).json({ success: false, message: 'Incorrect password' });
+                })
+                .catch((err) => res.status(500).json({ success: false, message: err.message })))
+            .catch((e) => res.status(500).json({ success: false, message: e.message }));
     }
 
     logout(req: Request, res: Response) {

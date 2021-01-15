@@ -1,12 +1,10 @@
 import './config/passport';
 
 import * as dotenv from 'dotenv';
-import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import passport from 'passport';
 import session from 'express-session';
 import helmet from 'helmet';
 import locationRoutes from './routes/locations';
@@ -27,26 +25,6 @@ const port = process.env.PORT || 3000;
 app.use(helmet());
 
 const logger = initLogger('index');
-
-app.use(session({
-    store: new RedisStore({
-        client,
-        name: process.env.REDIS_NAME,
-        cookie: {
-            maxAge: Number(process.env.REDIS_AGE),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: true,
-
-        },
-    }),
-    saveUninitialized: false,
-    secret: process.env.REDIS_SECRET,
-    resave: false,
-
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(morgan('dev')); // TODO: add support for different environments
 
