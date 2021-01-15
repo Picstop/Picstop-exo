@@ -8,6 +8,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     const authHeader = req.headers.authorization;
     if (authHeader) {
         jwt.verify(authHeader, process.env.JWT_SECRET || '$$2d##dS#', (err, out) => {
+            console.log(out);
             if (err)res.status(400).json({ success: false, message: err.message });
             User.exists({
                 _id: out._id,
@@ -15,11 +16,11 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
                 if (ex) {
                     req.user = out;
                     next();
-                } else res.sendStatus(403);
+                } else return res.status(401).json({ success: false, message: 'Unauthenticated' });
             })
                 .catch((e) => next(e));
         });
     } else {
-        res.sendStatus(401);
+        return res.status(401).json({ success: false, message: 'Missing token' });
     }
 };

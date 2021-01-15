@@ -26,23 +26,6 @@ app.use(helmet());
 
 const logger = initLogger('index');
 
-app.use(session({
-    store: new RedisStore({
-        client,
-        name: process.env.REDIS_NAME,
-        cookie: {
-            maxAge: Number(process.env.REDIS_AGE),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: true,
-
-        },
-    }),
-    saveUninitialized: false,
-    secret: process.env.REDIS_SECRET,
-    resave: false,
-
-}));
-
 app.use(morgan('dev')); // TODO: add support for different environments
 
 app.use(bodyParser.json());
