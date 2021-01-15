@@ -3,7 +3,6 @@ const {
 } = require('chai');
 let request = require('supertest');
 const faker = require('faker');
-const { Long } = require('mongodb');
 
 let uinfo;
 let ouinfo;
