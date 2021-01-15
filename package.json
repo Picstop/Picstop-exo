@@ -30,6 +30,7 @@
     "@types/mongodb": "^3.6.3",
     "async": "^3.2.0",
     "aws-sdk": "^2.824.0",
+    "basetag": "^1.2.10",
     "bcrypt": "^5.0.0",
     "connect-redis": "^5.0.0",
     "crypto": "^1.0.1",
@@ -54,6 +55,6 @@
     "start": "node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "dev": "ts-node-dev index.ts",
-    "test": "mocha"
+    "test-mongo": "ts-mocha ./tests/unit/mongo-setup.ts && ts-mocha ./tests/unit/**.ts"
   }
 }
