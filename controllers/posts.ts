@@ -178,7 +178,6 @@ export default class PostController {
 
     async unlikePost(req: Request, res: Response) {
         const { id } = req.params;
-        console.log(id);
         return Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
             .orFail(new Error('Post not found!'))
             .exec()

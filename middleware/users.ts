@@ -199,7 +199,7 @@ export default class UserMiddleware {
 
     async notThemself(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;
-        if (req.user._id.equals(id)) return res.status(400).json({ success: false, message: 'Cannot attempt user actions on yourself' });
+        if (req.user._id === (id)) return res.status(400).json({ success: false, message: 'Cannot attempt user actions on yourself' });
         return next();
     }
 }
