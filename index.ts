@@ -1,12 +1,10 @@
 import './config/passport';
 
 import * as dotenv from 'dotenv';
-import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import passport from 'passport';
 import session from 'express-session';
 import helmet from 'helmet';
 import locationRoutes from './routes/locations';
@@ -44,9 +42,6 @@ app.use(session({
     resave: false,
 
 }));
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(morgan('dev')); // TODO: add support for different environments
 
