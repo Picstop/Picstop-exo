@@ -9,9 +9,8 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     if (authHeader) {
         jwt.verify(authHeader, process.env.JWT_SECRET || '$$2d##dS#', (err, out) => {
             if (err)res.status(400).json({ success: false, message: err.message });
-            User.exists({
-                _id: out._id,
-            }).then((ex: Boolean) => {
+            User.findById(out._id,)
+                .then((ex: Boolean) => {
                 if (ex) {
                     req.user = out;
                     next();
