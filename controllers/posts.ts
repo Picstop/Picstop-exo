@@ -31,14 +31,14 @@ export default class PostController {
         const nl = [...Array(files).keys()];
         const uploadPromises = nl.map((i) => s3.getSignedUrl('putObject', {
             Bucket: s3Bucket,
-            Key: `${authorId}/${_id.toString()}/${i}.webp`,
+            Key: `${authorId}/${_id.toString()}/${i}.jpg`,
             Expires: 60,
-            ContentType: 'image/webp',
+            ContentType: 'image/jpeg',
             ACL: 'public-read',
         }));
         const downloadPromises = nl.map((i) => s3.getSignedUrl('getObject', {
             Bucket: s3Bucket,
-            Key: `${authorId}/${_id.toString()}/${i}.webp`,
+            Key: `${authorId}/${_id.toString()}/${i}.jpg`,
         }));
         try {
             const urls = await Promise.all(uploadPromises);
