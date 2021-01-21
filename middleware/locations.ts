@@ -1,8 +1,9 @@
 import { NextFunction, Response } from 'express';
 import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
 import { NewRequest as Request } from '../types/types';
-
 import Location from '../models/location';
+import User from '../models/user';
 
 export default class locationMiddleware {
     checkProximity(req: Request, res: Response, next: NextFunction) {
@@ -40,5 +41,33 @@ export default class locationMiddleware {
             return res.status(400).json({ success: false, message: 'Missing value: maxDistance' });
         }
         next();
+    }
+
+    isLocation(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.body;
+        try {
+            const findLocation = Location.findOne({ _id: mongoose.Types.ObjectId(id) }).orFail(new Error('Location not found')).exec();
+            if (findLocation) return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: 'Location not found' });
+        }
+        /*
+        return Location.findOne({ _id: mongoose.Types.ObjectId(id) }).orFail(new Error('Location not found')).exec()
+            .then(() => next())
+            .catch((e) => res.status(500).json({ success: false, message: e.message })); */
+    }
+
+    async alreadySaved(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.body;
+        try {
+            const user = await User.findById(req.user._id).exec();
+            const alreadySaved = user.savedLocations.includes(id);
+            if (alreadySaved) {
+                return res.status(400).json({ success: false, message: 'Already saved location' });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
     }
 }
