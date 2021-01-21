@@ -234,14 +234,14 @@ export default class UserController {
         try {
             const uploadUrl = await s3.getSignedUrl('putObject', {
                 Bucket: s3Bucket,
-                Key: `${id}/pfp.webp`,
+                Key: `${id}/pfp.jpg`,
                 Expires: 60,
-                ContentType: 'image/webp',
+                ContentType: 'image/jpeg',
                 ACL: 'public-read',
             });
             const profilePic = await s3.getSignedUrl('getObject', { // is the put url the same as the get url?
                 Bucket: s3Bucket,
-                Key: `${id}/pfp.webp`,
+                Key: `${id}/pfp.jpg`,
                 Expires: 60,
             });
             return User.findByIdAndUpdate(id, { profilePic })
