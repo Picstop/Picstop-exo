@@ -133,26 +133,47 @@ export default class PostController {
     async getFeedSet(req: Request, res: Response) {
         const { userId } = req.body;
         const getStr = `SeenPosts:${userId}`;
-        const PostList = await client.get(getStr).split(',') || [];
+        let PostList;
+        const set = await client.get(getStr);
+        if (set == null || set === '') {
+            PostList = [];
+        } else {
+            PostList = set.split(',');
+        }
 
         User.findById(userId)
             .orFail(new Error('User not found!'))
             .exec()
-            .then((usr) => Post.find({
-                _id: {
-                    $ne: {
-                        $in: PostList,
+            .then((usr) => {
+                usr.following.push(usr._id);
+                if (PostList.length < 1) {
+                    return Post.find({
+                        authorId: {
+                            $in: usr.following,
+                        },
+                    }).limit(20);
+                }
+                return Post.find({
+                    _id: {
+                        $ne: {
+                            $in: PostList,
+                        },
                     },
-                },
-                authorId: {
-                    $in: usr.following,
-                },
-            }).limit(20))
+                    authorId: {
+                        $in: usr.following,
+                    },
+                }).limit(20);
+            })
             .then((posts) => new Promise((resolve, reject) => {
-                posts.forEach((p) => PostList.push(p._id));
-                client.setex(getStr, 600, PostList.toString())
-                    .then(() => resolve(posts))
-                    .catch((err) => reject(err));
+                posts.forEach((p) => { console.log(p._id); PostList.push(p._id); });
+                console.log(PostList);
+                if (PostList.length <= 1) {
+                    client.setex(getStr, 600, PostList.toString())
+                        .then(() => resolve(posts))
+                        .catch((err) => reject(err));
+                } else {
+                    resolve([]);
+                }
             }))
             .then((result: any) => res.status(200).json({
                 success: true,
