@@ -13,7 +13,7 @@ router.get('/get/:id', isAuthenticated, async (req: Request, res) => Posts.getPo
 
 router.delete('/delete/:id', isAuthenticated, PostMiddleware.verifyAuthor, async (req: Request, res) => Posts.deletePost(req, res));
 
-router.get('/getUserPosts', isAuthenticated, async (req: Request, res) => Posts.getUserPosts(req, res));
+router.post('/getUserPosts', isAuthenticated, async (req: Request, res) => Posts.getUserPosts(req, res));
 
 router.patch('/caption/:id', isAuthenticated, PostMiddleware.verifyAuthor, async (req: Request, res) => Posts.updatePostCaption(req, res));
 
@@ -21,6 +21,6 @@ router.post('/like/:id', isAuthenticated, PostMiddleware.checkIfAlreadyLiked, as
 
 router.post('/unlike/:id', isAuthenticated, PostMiddleware.checkIfAlreadyUnliked, async (req: Request, res) => Posts.unlikePost(req, res));
 
-router.get('/feed', isAuthenticated, async (req: Request, res) => Posts.getFeedSet(req, res));
+router.post('/feed', isAuthenticated, async (req: Request, res) => Posts.getFeedSet(req, res));
 
 export default router;
