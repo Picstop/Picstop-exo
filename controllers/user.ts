@@ -94,20 +94,16 @@ export default class UserController {
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
-                .then(async (posts) => {
-                    const reMakePost = posts.map(async (z) => {
+                .then((posts) => {
+                    const reMakePost = posts.map((z) => {
                         const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        const getpfp = z.comments.map((i) => s3.getSignedUrl('getObject', {
-                            Bucket: s3Bucket,
-                            Key: `${i.authorId}/pfp.jpg`,
-                        }).then((url) => i.authorId = url));
-
-                        z.images = await Promise.all(imagePromises);
-                        z.comments = await Promise.all(getpfp);
-                        return z;
+                        return Promise.all(imagePromises).then((urls) => {
+                            z.images = urls;
+                            return z;
+                        });
                     });
                     return Promise.all(reMakePost);
                 });
@@ -146,20 +142,16 @@ export default class UserController {
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
-                .then(async (posts) => {
-                    const reMakePost = posts.map(async (z) => {
+                .then((posts) => {
+                    const reMakePost = posts.map((z) => {
                         const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        const getpfp = z.comments.map((i) => s3.getSignedUrl('getObject', {
-                            Bucket: s3Bucket,
-                            Key: `${i.authorId}/pfp.jpg`,
-                        }).then((url) => i.authorId = url));
-
-                        z.images = await Promise.all(imagePromises);
-                        z.comments = await Promise.all(getpfp);
-                        return z;
+                        return Promise.all(imagePromises).then((urls) => {
+                            z.images = urls;
+                            return z;
+                        });
                     });
                     return Promise.all(reMakePost);
                 });
@@ -289,7 +281,12 @@ export default class UserController {
                 ContentType: 'image/jpeg',
                 ACL: 'public-read',
             });
-            const profilePic = `${id}/pfp.jpg`;
+            const profilePic = await s3.getSignedUrl('getObject', { // is the put url the same as the get url?
+                Bucket: s3Bucket,
+                Key: `${id}/pfp.jpg`,
+                Expires: 60,
+            });
+
             return User.findByIdAndUpdate(id, { profilePic })
                 .then((usr) => res.status(200).json({
                     user: usr,

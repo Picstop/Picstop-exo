@@ -18,6 +18,7 @@ export type IUser = Document & {
   private: boolean;
   blocked: Array<mongoose.Schema.Types.ObjectId>;
   bio: string;
+  profilePic: string;
   savedLocations: Array<mongoose.Schema.Types.ObjectId>;
 
   comparePassword: comparePasswordFunction;
@@ -39,7 +40,7 @@ export type Location = Document & {
 
 export type Post = Document & {
   authorId: mongoose.Schema.Types.ObjectId ;
-  image: string;
+  images: string[];
   caption: string;
   location: mongoose.Schema.Types.ObjectId;
   likes: Array<mongoose.Schema.Types.ObjectId>;
