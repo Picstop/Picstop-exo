@@ -39,7 +39,7 @@ export type Location = Document & {
 
 export type Post = Document & {
   authorId: mongoose.Schema.Types.ObjectId ;
-  image: string;
+  images: string[];
   caption: string;
   location: mongoose.Schema.Types.ObjectId;
   likes: Array<mongoose.Schema.Types.ObjectId>;
