@@ -1,42 +1,25 @@
 /* eslint-disable import/prefer-default-export */
-import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
+// import { Strategy as LocalStrategy } from 'passport-local';
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { IUser } from '../types/types';
 
-passport.serializeUser((user: IUser, done) => {
-    done(undefined, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-    User.findById(id)
-        .orFail(new Error('User not found!'))
-        .exec((err: Error, user: IUser) => {
-            if (err) return done(err, null);
-            return done(null, user);
-        });
-});
-
-passport.use(
-    new LocalStrategy({ usernameField: 'username' }, (username, password, done) => {
-        User.findOne({ username }).select('+password')
-            .orFail(new Error('User not found!'))
-            .exec()
-            .then((user: IUser) => user.comparePassword(password, user.password, (err: Error, isMatch: boolean) => {
-                if (err) { return done(err); }
-                if (isMatch) {
-                    return done(undefined, user);
-                }
-                return done(undefined, false, { message: 'Invalid username or password.' });
-            }))
-            .catch((err: Error) => done(err));
-    }),
-);
-
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated()) {
-        return next();
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        jwt.verify(authHeader, process.env.JWT_SECRET || '$$2d##dS#', (err, out) => {
+            if (err)res.status(400).json({ success: false, message: err.message });
+            User.findById(out._id)
+                .then((ex: IUser) => {
+                    if (ex) {
+                        req.user = out;
+                        return next();
+                    } return res.status(401).json({ success: false, message: 'Unauthenticated' });
+                })
+                .catch((e) => next(e));
+        });
+    } else {
+        return res.status(401).json({ success: false, message: 'Missing token' });
     }
-    return res.status(401).json({ message: 'Not logged in' });
 };

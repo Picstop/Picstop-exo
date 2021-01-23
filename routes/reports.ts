@@ -16,4 +16,5 @@ router.post('/location', isAuthenticated, reporterMiddleware.checkIfUserReported
 router.post('/user', isAuthenticated, reporterMiddleware.notThemself, reporterMiddleware.checkIfUserReportedUser, (req: Request, res) => reporter.createUserReport(req, res));
 
 router.post('/post', isAuthenticated, reporterMiddleware.checkIfPostAuthor, reporterMiddleware.checkIfUserReportedPost, (req: Request, res) => reporter.createPostReport(req, res));
+
 export default router;

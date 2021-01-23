@@ -281,7 +281,12 @@ export default class UserController {
                 ContentType: 'image/jpeg',
                 ACL: 'public-read',
             });
-            const profilePic = `${id}/pfp.jpg`;
+            const profilePic = await s3.getSignedUrl('getObject', { // is the put url the same as the get url?
+                Bucket: s3Bucket,
+                Key: `${id}/pfp.jpg`,
+                Expires: 60,
+            });
+
             return User.findByIdAndUpdate(id, { profilePic })
                 .then((usr) => res.status(200).json({
                     user: usr,
