@@ -25,7 +25,7 @@ router.get('/get/:username',
     isAuthenticated,
     userMiddleware.allowedToViewProfile, (req: Request, res) => userController.getUser(req, res));
 
-router.get('/getById/:id', isAuthenticated, userMiddleware.allowedToViewProfile, (req: Request, res) => userController.getUserById(req, res));
+router.get('/getById/:id', isAuthenticated, userMiddleware.allowedToViewById, async (req: Request, res) => userController.getUserById(req, res));
 
 router.get('/getByArray', isAuthenticated, (req: Request, res) => userController.getUsersByArray(req, res));
 

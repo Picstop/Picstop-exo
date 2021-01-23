@@ -71,6 +71,50 @@ export default class UserMiddleware {
         }
     }
 
+    async allowedToViewById(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.params;
+        try {
+            const user = await User.findById(id)
+                .orFail(new Error('User not found!'))
+                .exec();
+            const requestedUser = await User.findById(req.user._id).orFail(new Error('Request user not found!')).exec();
+            const follows = user.followers.some((follower) => `${follower}` == (req.user._id));
+            const incomingBlocks = await user.blocked.some((usr) => `${usr}` == (req.user._id));
+            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` == user._id);
+            if (incomingBlocks === true || outgoingBlocks === true) {
+                return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
+            }
+            if (!user.private) { return next(); }
+
+            if (!follows) {
+                const locations = await Location.find({ author: user._id });
+                const url = await s3.getSignedUrl('getObject', {
+                    Bucket: s3Bucket,
+                    Key: `${user._id}/pfp.jpg`,
+                });
+                return res.status(200).json({
+                    success: true,
+                    private: true,
+                    message: {
+                        user: {
+                            _id: user._id,
+                            followers: user.followers.length,
+                            following: user.following.length,
+                            name: user.name,
+                            bio: user.bio,
+                        },
+                        locations: locations.length,
+                        profilePicture: url,
+
+                    },
+                });
+            }
+            return next();
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
     // isBlocked
     async isBlocked(req: Request, res: Response, next: NextFunction) {
         const { id } = req.body;

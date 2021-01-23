@@ -128,6 +128,7 @@ export default class UserController {
 
     async getUserById(req: Request, res: Response) {
         const { id } = req.params;
+        console.log(id);
         try {
             const user = await User.findById(id)
                 .orFail(new Error('User not found!'))
@@ -135,7 +136,7 @@ export default class UserController {
                 .then(async (usr) => {
                     const url = await s3.getSignedUrl('getObject', {
                         Bucket: s3Bucket,
-                        Key: usr.profilePic,
+                        Key: `${id}/pfp.jpg`,
                     });
                     usr.profilePic = url;
                     return usr;
