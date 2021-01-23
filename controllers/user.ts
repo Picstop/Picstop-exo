@@ -83,9 +83,34 @@ export default class UserController {
         try {
             const user = await User.findOne({ username })
                 .orFail(new Error('User not found!'))
-                .exec();
+                .exec()
+                .then(async (usr) => {
+                    const url = await s3.getSignedUrl('getObject', {
+                        Bucket: s3Bucket,
+                        Key: usr.profilePic,
+                    });
+                    usr.profilePic = url;
+                    return usr;
+                });
 
-            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec();
+            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
+                .then(async (posts) => {
+                    const reMakePost = posts.map(async (z) => {
+                        const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: i,
+                        }));
+                        const getpfp = z.comments.map((i) => s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: `${i.authorId}/pfp.jpg`,
+                        }).then((url) => i.authorId = url));
+
+                        z.images = await Promise.all(imagePromises);
+                        z.comments = await Promise.all(getpfp);
+                        return z;
+                    });
+                    return Promise.all(reMakePost);
+                });
             const userLocationSet = new Set(locations);
             const userLocations = [...userLocationSet];
             return res.status(200).json({ success: true, message: { user, userLocations } });
@@ -110,9 +135,34 @@ export default class UserController {
         try {
             const user = await User.findById(id)
                 .orFail(new Error('User not found!'))
-                .exec();
+                .exec()
+                .then(async (usr) => {
+                    const url = await s3.getSignedUrl('getObject', {
+                        Bucket: s3Bucket,
+                        Key: usr.profilePic,
+                    });
+                    usr.profilePic = url;
+                    return usr;
+                });
 
-            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec();
+            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
+                .then(async (posts) => {
+                    const reMakePost = posts.map(async (z) => {
+                        const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: i,
+                        }));
+                        const getpfp = z.comments.map((i) => s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: `${i.authorId}/pfp.jpg`,
+                        }).then((url) => i.authorId = url));
+
+                        z.images = await Promise.all(imagePromises);
+                        z.comments = await Promise.all(getpfp);
+                        return z;
+                    });
+                    return Promise.all(reMakePost);
+                });
             const userLocationSet = new Set(locations);
             const userLocations = [...userLocationSet];
             return res.status(200).json({ success: true, message: { user, userLocations } });
@@ -239,11 +289,7 @@ export default class UserController {
                 ContentType: 'image/jpeg',
                 ACL: 'public-read',
             });
-            const profilePic = await s3.getSignedUrl('getObject', { // is the put url the same as the get url?
-                Bucket: s3Bucket,
-                Key: `${id}/pfp.jpg`,
-                Expires: 60,
-            });
+            const profilePic = `${id}/pfp.jpg`;
             return User.findByIdAndUpdate(id, { profilePic })
                 .then((usr) => res.status(200).json({
                     user: usr,
