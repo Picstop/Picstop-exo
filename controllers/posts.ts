@@ -42,7 +42,7 @@ export default class PostController {
         }));
         try {
             const urls = await Promise.all(uploadPromises);
-            const images = nl.map((i) => `${authorId}/${_id.toString()}/${i}.webp`);
+            const images = nl.map((i) => `${authorId}/${_id.toString()}/${i}.jpg`);
 
             const post = removeNullUndef({
                 _id,
