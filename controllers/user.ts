@@ -87,7 +87,7 @@ export default class UserController {
                 .then(async (usr) => {
                     const url = await s3.getSignedUrl('getObject', {
                         Bucket: s3Bucket,
-                        Key: usr.profilePic,
+                        Key: `${usr._id}/pfp.jpg`,
                     });
                     usr.profilePic = url;
                     return usr;

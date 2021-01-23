@@ -1,10 +1,18 @@
 import { NextFunction, Response } from 'express';
 
+import * as AWS from 'aws-sdk';
 import User from '../models/user';
 import initLogger from '../core/logger';
 import { NewRequest as Request } from '../types/types';
 import Location from '../models/location';
 
+const credentials = {
+    accessKeyId: process.env.AWS_ACCESS,
+    secretAccessKey: process.env.AWS_SECRET,
+};
+AWS.config.update({ credentials, region: 'us-east-1' });
+const s3 = new AWS.S3();
+const s3Bucket = process.env.BUCKET_NAME;
 export default class UserMiddleware {
     checkFields(req: Request, res: Response, next: NextFunction) {
         if (!req.body.username || !req.body.email || !req.body.password || !req.body.password2) {
@@ -36,6 +44,10 @@ export default class UserMiddleware {
 
             if (!follows) {
                 const locations = await Location.find({ author: user._id });
+                const url = await s3.getSignedUrl('getObject', {
+                    Bucket: s3Bucket,
+                    Key: `${user._id}/pfp.jpg`,
+                });
                 return res.status(200).json({
                     success: true,
                     private: true,
@@ -48,6 +60,7 @@ export default class UserMiddleware {
                             bio: user.bio,
                         },
                         locations: locations.length,
+                        profilePicture: url,
 
                     },
                 });
