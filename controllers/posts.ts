@@ -39,6 +39,7 @@ export default class PostController {
         const downloadPromises = nl.map((i) => s3.getSignedUrl('getObject', {
             Bucket: s3Bucket,
             Key: `${authorId}/${_id.toString()}/${i}.jpg`,
+            Expires: 60 * 60 * 24 * 365 * 1000,
         }));
         try {
             const urls = await Promise.all(uploadPromises);
