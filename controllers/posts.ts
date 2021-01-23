@@ -161,7 +161,8 @@ export default class PostController {
         if (set == null || set === '') {
             PostList = [];
         } else {
-            PostList = set.split(',');
+            const stringSet = set.toString();
+            PostList = stringSet.split(',');
         }
 
         User.findById(userId)
@@ -169,6 +170,10 @@ export default class PostController {
             .exec()
             .then((usr) => {
                 usr.following.push(usr._id);
+                const followingArray = [];
+                usr.following.forEach((e) => {
+                    followingArray.push(e.toString());
+                });
                 if (PostList.length < 1) {
                     return Post.find({
                         authorId: {
@@ -178,9 +183,7 @@ export default class PostController {
                 }
                 return Post.find({
                     _id: {
-                        $ne: {
-                            $in: PostList,
-                        },
+                        $nin: PostList,
                     },
                     authorId: {
                         $in: usr.following,
@@ -201,9 +204,8 @@ export default class PostController {
                 return Promise.all(reMakePost);
             })
             .then((posts) => new Promise((resolve, reject) => {
-                posts.forEach((p) => { console.log(p._id); PostList.push(p._id); });
-                console.log(PostList);
-                if (PostList.length <= 1) {
+                posts.forEach((p) => { PostList.push(p._id); });
+                if (PostList.length >= 1) {
                     client.setex(getStr, 600, PostList.toString())
                         .then(() => resolve(posts))
                         .catch((err) => reject(err));
