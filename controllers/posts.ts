@@ -36,13 +36,9 @@ export default class PostController {
             ContentType: 'image/webp',
             ACL: 'public-read',
         }));
-        const downloadPromises = nl.map((i) => s3.getSignedUrl('getObject', {
-            Bucket: s3Bucket,
-            Key: `${authorId}/${_id.toString()}/${i}.webp`,
-        }));
         try {
             const urls = await Promise.all(uploadPromises);
-            const images = await Promise.all(downloadPromises);
+            const images = nl.map((i) => `${authorId}/${_id.toString()}/${i}.webp`);
 
             const post = removeNullUndef({
                 _id,
@@ -75,6 +71,16 @@ export default class PostController {
         Post.findById(id)
             .orFail(new Error('Post not found!'))
             .exec()
+            .then((post) => {
+                const imagePromises = post.images.map((i) => s3.getSignedUrl('getObject', {
+                    Bucket: s3Bucket,
+                    Key: i,
+                }));
+                return Promise.all(imagePromises).then((urls) => {
+                    post.images = urls;
+                    return post;
+                });
+            })
             .then((result) => res.status(200).json({
                 success: true,
                 message: result,
@@ -90,6 +96,19 @@ export default class PostController {
         Post.find({ authorId: userId })
             .orFail(new Error('Post not found!'))
             .exec()
+            .then((posts) => {
+                const reMakePost = posts.map((z) => {
+                    const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
+                        Bucket: s3Bucket,
+                        Key: i,
+                    }));
+                    return Promise.all(imagePromises).then((urls) => {
+                        z.images = urls;
+                        return z;
+                    });
+                });
+                return Promise.all(reMakePost);
+            })
             .then((result) => res.status(200).json({
                 success: true,
                 message: {
@@ -148,6 +167,19 @@ export default class PostController {
                     $in: usr.following,
                 },
             }).limit(20))
+            .then((posts) => {
+                const reMakePost = posts.map((z) => {
+                    const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
+                        Bucket: s3Bucket,
+                        Key: i,
+                    }));
+                    return Promise.all(imagePromises).then((urls) => {
+                        z.images = urls;
+                        return z;
+                    });
+                });
+                return Promise.all(reMakePost);
+            })
             .then((posts) => new Promise((resolve, reject) => {
                 posts.forEach((p) => PostList.push(p._id));
                 client.setex(getStr, 600, PostList.toString())
