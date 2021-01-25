@@ -8,7 +8,6 @@ import postReport from '../models/postReport';
 import locationReport from '../models/locationReport';
 import Comment from '../models/comment';
 import Post from '../models/post';
-import Location from '../models/location';
 import initLogger from '../core/logger';
 import { NewRequest as Request } from '../types/types';
 

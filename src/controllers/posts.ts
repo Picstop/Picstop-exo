@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
 
 /* eslint-disable class-methods-use-this */
-import { NextFunction, Response } from 'express';
+import { Response } from 'express';
 
-import { loggers } from 'winston';
 import * as AWS from 'aws-sdk';
 import Post from '../models/post';
-import { Post as PostType, NewRequest as Request } from '../types/types';
+import { NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import { client } from '../core/redis';
@@ -80,10 +79,7 @@ export default class PostController {
                     Bucket: s3Bucket,
                     Key: i,
                 }));
-                return Promise.all(imagePromises).then((urls) => {
-                    post.images = urls;
-                    return post;
-                });
+                return Promise.all(imagePromises).then((urls) => ({ ...post, images: urls }));
             })
             .then((result) => res.status(200).json({
                 success: true,
@@ -106,10 +102,7 @@ export default class PostController {
                         Bucket: s3Bucket,
                         Key: i,
                     }));
-                    return Promise.all(imagePromises).then((urls) => {
-                        z.images = urls;
-                        return z;
-                    });
+                    return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
                 });
                 return Promise.all(reMakePost);
             })
@@ -158,7 +151,7 @@ export default class PostController {
         const getStr = `SeenPosts:${userId}`;
         let PostList;
         const set = await client.get(getStr);
-        if (set == null || set === '') {
+        if (set === null || set === '') {
             PostList = [];
         } else {
             const stringSet = set.toString();
@@ -196,10 +189,7 @@ export default class PostController {
                         Bucket: s3Bucket,
                         Key: i,
                     }));
-                    return Promise.all(imagePromises).then((urls) => {
-                        z.images = urls;
-                        return z;
-                    });
+                    return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
                 });
                 return Promise.all(reMakePost);
             })

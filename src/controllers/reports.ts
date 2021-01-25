@@ -1,10 +1,10 @@
 /* eslint-disable class-methods-use-this */
-import { NextFunction, Response } from 'express';
+import { Response } from 'express';
 import { NewRequest as Request } from '../types/types';
-import commentReport from '../models/commentReport';
-import userReport from '../models/userReport';
-import postReport from '../models/postReport';
-import locationReport from '../models/locationReport';
+import CommentReport from '../models/commentReport';
+import UserReport from '../models/userReport';
+import PostReport from '../models/postReport';
+import LocationReport from '../models/locationReport';
 import initLogger from '../core/logger';
 
 const logger = initLogger('ControllerReport');
@@ -14,7 +14,7 @@ export default class ReportController {
     async createCommentReport(req: Request, res: Response) {
         const { reason, comment } = req.body;
         const reportedBy = req.user._id;
-        const newReport = new commentReport({
+        const newReport = new CommentReport({
             reportedBy,
             reason,
             comment,
@@ -32,7 +32,7 @@ export default class ReportController {
         const { reason, post } = req.body;
         const reportedBy = req.user._id;
 
-        const newReport = new postReport({
+        const newReport = new PostReport({
             reportedBy,
             reason,
             post,
@@ -50,7 +50,7 @@ export default class ReportController {
         const { reason, user } = req.body;
         const reportedBy = req.user._id;
 
-        const newReport = new userReport({
+        const newReport = new UserReport({
             reportedBy,
             reason,
             user,
@@ -67,7 +67,7 @@ export default class ReportController {
         const { reason, location } = req.body;
         const reportedBy = req.user._id;
 
-        const newReport = new locationReport({
+        const newReport = new LocationReport({
             reportedBy,
             reason,
             location,

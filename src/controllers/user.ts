@@ -1,4 +1,5 @@
-import { NextFunction, Response } from 'express';
+/* eslint-disable no-param-reassign */
+import { Response } from 'express';
 
 import async from 'async';
 
@@ -11,7 +12,6 @@ import initLogger from '../core/logger';
 // import s3 from '../core/s3';
 import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
-import Location from '../models/location';
 import Post from '../models/post';
 
 const logger = initLogger('ControllerUser');
@@ -89,8 +89,7 @@ export default class UserController {
                         Bucket: s3Bucket,
                         Key: `${usr._id}/pfp.jpg`,
                     });
-                    usr.profilePic = url;
-                    return usr;
+                    return { ...usr, profilePic: url };
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
@@ -100,10 +99,7 @@ export default class UserController {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        return Promise.all(imagePromises).then((urls) => {
-                            z.images = urls;
-                            return z;
-                        });
+                        return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
                     });
                     return Promise.all(reMakePost);
                 });
@@ -138,8 +134,7 @@ export default class UserController {
                         Bucket: s3Bucket,
                         Key: `${id}/pfp.jpg`,
                     });
-                    usr.profilePic = url;
-                    return usr;
+                    return { ...usr, profilePic: url };
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
@@ -149,10 +144,7 @@ export default class UserController {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        return Promise.all(imagePromises).then((urls) => {
-                            z.images = urls;
-                            return z;
-                        });
+                        return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
                     });
                     return Promise.all(reMakePost);
                 });
@@ -169,7 +161,7 @@ export default class UserController {
         const { id } = req.body;
         try {
             const isPrivate = await this.isPrivate(id);
-            if (isPrivate == null) {
+            if (isPrivate === null) {
                 logger.error(`Error getting user ${id} 's privacy setting`);
                 return res.status(500).json({ success: false, message: 'Error getting user\'s privacy setting' });
             } if (isPrivate) {
@@ -360,7 +352,7 @@ export default class UserController {
 
     async postResetPassword(req: Request, res: Response) {
         async.waterfall([
-            function (done) {
+            (done) => {
                 User.findOne({
                     email: req.body.email,
                 })
@@ -373,21 +365,21 @@ export default class UserController {
                         }
                     });
             },
-            function (user, done) {
+            (user, done) => {
                 // create the random token
                 crypto.randomBytes(20, (err, buffer) => {
                     const token = buffer.toString('hex');
                     done(err, user, token);
                 });
             },
-            function (user, token, done) {
+            (user, token, done) => {
                 User.findByIdAndUpdate({ _id: user._id }, { resetPasswordToken: token, resetPasswordExpires: Date.now() + 86400000 }, { new: true })
                     .orFail(new Error('User not found!'))
                     .exec((err, newUser) => {
                         done(err, token, newUser);
                     });
             },
-            function (token, user, done) {
+            (token, user, done) => {
                 SES.sendEmail({
                     Destination: {
                         ToAddresses: [user.email],
@@ -396,6 +388,7 @@ export default class UserController {
                         Body: {
                             Html: {
                                 Charset: 'UTF-8',
+                                // eslint-disable-next-line max-len
                                 Data: `You are receiving this because you (or someone else) have requested the reset of the password for your account.<br/><br/>Please click on the following link, or paste this into your browser to reset your password:<br/><br/> https://${req.headers.host}/user/reset/${token}<br/><br/>If you did not request this, please ignore this email and your password will remain unchanged.<br/>`,
                             },
                         },
@@ -421,7 +414,8 @@ export default class UserController {
 
     async postPasswordReset(req: Request, res: Response) {
         async.waterfall([
-            function (done) {
+            (done) => {
+                // eslint-disable-next-line consistent-return
                 User.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, async (err, user) => {
                     if (err) return res.status(400).json({ success: false, message: 'Error finding user' });
                     if (!user) {
@@ -437,7 +431,7 @@ export default class UserController {
                     });
                 }).orFail(new Error('User not found!'));
             },
-            function (user, done) {
+            (user, done) => {
                 SES.sendEmail({
                     Destination: {
                         ToAddresses: [user.email],

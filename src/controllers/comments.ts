@@ -1,8 +1,8 @@
 /* eslint-disable class-methods-use-this */
-import { NextFunction, Response } from 'express';
+import { Response } from 'express';
 
 import Comment from '../models/comment';
-import { Comment as CommentType, NewRequest as Request } from '../types/types';
+import { NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import Post from '../models/post';
 

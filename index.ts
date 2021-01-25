@@ -1,22 +1,17 @@
-import './config/passport';
+import './src/config/passport';
 
 import * as dotenv from 'dotenv';
-import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import session from 'express-session';
 import helmet from 'helmet';
-import locationRoutes from './routes/locations';
-import commentRoutes from './routes/comments';
-import postRoutes from './routes/posts';
-import reportRoutes from './routes/reports';
-import initLogger from './core/logger';
-import db from './database/database';
-import Location from './models/location';
-import userRoutes from './routes/users';
-
-import { RedisStore, client } from './core/redis';
+import locationRoutes from './src/routes/locations';
+import commentRoutes from './src/routes/comments';
+import postRoutes from './src/routes/posts';
+import reportRoutes from './src/routes/reports';
+import initLogger from './src/core/logger';
+import db from './src/database/database';
+import userRoutes from './src/routes/users';
 
 dotenv.config();
 const app = express();

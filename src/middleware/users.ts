@@ -2,7 +2,6 @@ import { NextFunction, Response } from 'express';
 
 import * as AWS from 'aws-sdk';
 import User from '../models/user';
-import initLogger from '../core/logger';
 import { NewRequest as Request } from '../types/types';
 import Location from '../models/location';
 
@@ -34,9 +33,9 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
             const requestedUser = await User.findById(req.user._id).orFail(new Error('Request user not found!')).exec();
-            const follows = user.followers.some((follower) => `${follower}` == (req.user._id));
-            const incomingBlocks = await user.blocked.some((usr) => `${usr}` == (req.user._id));
-            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` == user._id);
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
+            const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
+            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` === user._id);
             if (incomingBlocks === true || outgoingBlocks === true) {
                 return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
             }
@@ -78,9 +77,9 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
             const requestedUser = await User.findById(req.user._id).orFail(new Error('Request user not found!')).exec();
-            const follows = user.followers.some((follower) => `${follower}` == (req.user._id));
-            const incomingBlocks = await user.blocked.some((usr) => `${usr}` == (req.user._id));
-            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` == user._id);
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
+            const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
+            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` === user._id);
             if (incomingBlocks === true || outgoingBlocks === true) {
                 return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
             }
@@ -123,8 +122,8 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
             const requestedUser = await User.findById(req.user._id).orFail(new Error('Requested user not found!')).exec();
-            const incomingBlocks = await user.blocked.some((usr) => `${usr}` == (req.user._id));
-            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` == user._id);
+            const incomingBlocks = await user.blocked.some((usr) => `${usr}` === (req.user._id));
+            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` === user._id);
             if (incomingBlocks === true || outgoingBlocks === true) {
                 return res.status(401).json({ success: false, message: 'User either blocked you or you blocked user' });
             }
@@ -141,7 +140,7 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
             const requestedUser = await User.findById(req.user._id).orFail(new Error('Requested user not found!')).exec();
-            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` == user._id);
+            const outgoingBlocks = await requestedUser.blocked.some((users) => `${users}` === user._id);
             if (outgoingBlocks === true) {
                 return res.status(401).json({ success: false, message: 'User already blocked' });
             }
@@ -157,8 +156,8 @@ export default class UserMiddleware {
             const user = await User.findById(id)
                 .orFail(new Error('User not found!'))
                 .exec();
-            const follows = user.followers.some((follower) => `${follower}` == (req.user._id));
-            const requested = user.followerRequests.some((follower) => `${follower}` == (req.user._id));
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
+            const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
             if (follows === true || requested === true) {
                 return res.status(401).json({ success: false, message: 'User already requested or follows user' });
             }
@@ -177,7 +176,7 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
             const requestedUser = await User.findById(req.user._id).orFail(new Error('Requested user not found!')).exec();
-            const blocked = requestedUser.blocked.some((users) => `${users}` == user._id);
+            const blocked = requestedUser.blocked.some((users) => `${users}` === user._id);
 
             if (!blocked) {
                 return res.status(400).json({ success: false, message: 'User is already unblocked' });
@@ -196,7 +195,7 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
 
-            const follows = user.followers.some((follower) => `${follower}` == (req.user._id));
+            const follows = user.followers.some((follower) => `${follower}` === (req.user._id));
             if (!follows) {
                 return res.status(400).json({ success: false, message: 'User is already unfollowed' });
             }
@@ -213,7 +212,7 @@ export default class UserMiddleware {
             const user = await User.findById(id)
                 .orFail(new Error('User not found!'))
                 .exec();
-            const requested = user.followerRequests.some((follower) => `${follower}` == (req.user._id));
+            const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
             if (!requested) { return next(); }
             return res.status(400).json({ success: false, message: 'Already requested to follow' });
         } catch (error) {
@@ -227,7 +226,7 @@ export default class UserMiddleware {
             const user = await User.findById(id)
                 .orFail(new Error('User not found!'))
                 .exec();
-            const requested = user.followerRequests.some((follower) => `${follower}` == (req.user._id));
+            const requested = user.followerRequests.some((follower) => `${follower}` === (req.user._id));
             if (!requested) {
                 return res.status(400).json({ success: false, message: 'Follow request does not exist.' });
             }
@@ -244,7 +243,7 @@ export default class UserMiddleware {
                 .orFail(new Error('User not found!'))
                 .exec();
             const requestedUser = await User.findById(req.user._id).orFail(new Error('Requested user not found!')).exec();
-            const requested = requestedUser.followerRequests.some((follower) => `${follower}` == (user.id));
+            const requested = requestedUser.followerRequests.some((follower) => `${follower}` === (user.id));
             if (!requested) {
                 return res.status(400).json({ success: false, message: 'Follow request does not exist.' });
             }

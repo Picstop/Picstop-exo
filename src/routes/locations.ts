@@ -1,4 +1,3 @@
-import { body, validationResult } from 'express-validator';
 import express, { Response } from 'express';
 import { NewRequest as Request } from '../types/types';
 import LocationController from '../controllers/locations';

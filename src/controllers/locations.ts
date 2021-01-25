@@ -1,13 +1,9 @@
 /* eslint-disable max-len */
 import { Response } from 'express';
 
-import _ from 'lodash';
-import mongoose from 'mongoose';
 import Location from '../models/location';
 import {
-    Location as LocationType,
     NewRequest as Request,
-    IUser,
 } from '../types/types';
 import User from '../models/user';
 import Post from '../models/post';

@@ -1,5 +1,5 @@
+/* eslint-disable consistent-return */
 import { NextFunction, Response } from 'express';
-import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import { NewRequest as Request } from '../types/types';
 import Location from '../models/location';
