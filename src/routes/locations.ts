@@ -19,4 +19,6 @@ router.post('/near', isAuthenticated, validateLocInput, async (req: Request, res
 router.get('/posts/:id', isAuthenticated, async (req: Request, res: Response) => locations.getExamplePics(req, res));
 
 router.post('/save', isAuthenticated, isLocation, alreadySaved, async (req: Request, res) => locations.saveLocation(req, res));
+
+router.get('/:id', isAuthenticated, async (req: Request, res) => locations.getLocationById(req, res));
 export default router;

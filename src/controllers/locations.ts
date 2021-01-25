@@ -70,4 +70,17 @@ export default class LocationController {
                 return res.status(500).json({ success: false, message: error.message });
             });
     }
+
+    async getLocationById(req: Request, res: Response) {
+        const { id } = req.params;
+        try {
+            const location = await Location.findById(id).orFail(new Error('Location not found'))
+                .exec()
+                .then((loc) => loc);
+            return res.status(200).json({ success: true, message: { location } });
+        } catch (error) {
+            logger.error(`Error getting location by id: ${id} with error ${error}`);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }
