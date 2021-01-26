@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 import { NextFunction, Response } from 'express';
 
 import * as AWS from 'aws-sdk';

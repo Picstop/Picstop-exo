@@ -9,7 +9,7 @@ export default class locationMiddleware {
     checkProximity(req: Request, res: Response, next: NextFunction) {
         const { long, lat } = req.body;
 
-        Location.find({ geoLocation: { $near: { $maxDistance: 10, $geometry: { type: 'Point', coordinates: [long, lat] } } } }).exec()
+        Location.find({ geoLocation: { $near: { $maxDistance: 30, $geometry: { type: 'Point', coordinates: [long, lat] } } } }).exec()
             .then((locations) => {
                 if (locations.length !== 0) {
                     return res.status(406).json({ success: false, message: locations });
