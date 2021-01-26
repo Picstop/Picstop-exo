@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
 
 /* eslint-disable class-methods-use-this */
-import { NextFunction, Response } from 'express';
+import { Response } from 'express';
 
-import { loggers } from 'winston';
 import * as AWS from 'aws-sdk';
 import Post from '../models/post';
-import { Post as PostType, NewRequest as Request } from '../types/types';
+import { NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import { client } from '../core/redis';
@@ -36,10 +35,7 @@ export default class PostController {
             ContentType: 'image/jpeg',
             ACL: 'public-read',
         }));
-        const downloadPromises = nl.map((i) => s3.getSignedUrl('getObject', {
-            Bucket: s3Bucket,
-            Key: `${authorId}/${_id.toString()}/${i}.jpg`,
-        }));
+
         try {
             const urls = await Promise.all(uploadPromises);
             const images = nl.map((i) => `${authorId}/${_id.toString()}/${i}.jpg`);
