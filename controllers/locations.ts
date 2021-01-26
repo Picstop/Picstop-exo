@@ -120,7 +120,7 @@ export default class LocationController {
                 if (location.images !== '') {
                     const download = await s3.getSignedUrl('getObject', {
                         Bucket: s3Bucket,
-                        Key: location.images[0],
+                        Key: location.images,
                     });
                     location.images = download;
                 }
