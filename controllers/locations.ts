@@ -139,8 +139,19 @@ export default class LocationController {
             .then((posts) => {
                 // @ts-ignore
                 const filtered = posts.filter((post) => post.authorId.private === false || post.authorId.followers.indexOf(req.user._id) >= 0);
-                return res.status(200).json({ success: true, message: filtered });
+                const reMakePost = filtered.map((z) => {
+                    const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
+                        Bucket: s3Bucket,
+                        Key: i,
+                    }));
+                    return Promise.all(imagePromises).then((urls) => {
+                        z.images = urls;
+                        return z;
+                    });
+                });
+                return Promise.all(reMakePost);
             })
+            .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((error) => {
                 logger.error(`Error finding example pics for location ${id} with error ${error}`);
                 return res.status(500).json({ success: false, message: error.message });
