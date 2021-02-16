@@ -14,7 +14,10 @@ const router = express.Router();
 
 router.post('/location', isAuthenticated, validateLocation, checkProximity, async (req: Request, res: Response) => locations.addLocation(req, res));
 
-router.post('/near', isAuthenticated, validateLocInput, async (req: Request, res: Response) => locations.findNearby(req, res));
+router.post('/near', isAuthenticated, validateLocInput, async (req: Request, res: Response) => {
+    const newLocs = [];
+    return locations.findNearby(req, res, newLocs);
+});
 
 router.get('/posts/:id', isAuthenticated, async (req: Request, res: Response) => locations.getExamplePics(req, res));
 

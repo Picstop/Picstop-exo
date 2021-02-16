@@ -461,4 +461,23 @@ export default class UserController {
             return res.status(200).json({ success: true, message: 'Password successfully reset' });
         });
     }
+
+    async search(req: Request, res: Response) {
+        try {
+            const { query } = req.body;
+            const users = await User.find({ username: { $regex: query, $options: 'i' } }).exec();
+            const locations = await Location.find({ name: { $regex: query, $options: 'i' } }).exec();
+            await users.forEach(async (usr) => {
+                const url = await s3.getSignedUrl('getObject', {
+                    Bucket: s3Bucket,
+                    Key: `${usr._id}/pfp.jpg`,
+                });
+                usr.profilePic = url;
+            });
+            return res.status(200).json({ success: true, message: { users, locations } });
+        } catch (error) {
+            logger.error(`Error searching ${req.body.query} with error ${error}`);
+            return res.status(500).json({ success: false, message: error });
+        }
+    }
 }
