@@ -94,6 +94,6 @@ router.get('/reset/:token', (req: Request, res) => userController.checkToken(req
 
 router.post('/reset/:token', userMiddleware.checkPasswordMatch, (req: Request, res) => userController.postPasswordReset(req, res));
 
-router.get('/search', isAuthenticated, (req: Request, res) => userController.search(req, res));
+router.post('/search', isAuthenticated, (req: Request, res) => userController.search(req, res));
 
 export default router;
