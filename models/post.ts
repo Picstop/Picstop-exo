@@ -10,7 +10,7 @@ const PostSchema = new Schema({
     },
     caption: {
         type: String,
-    },
+        maxlength: [10000, 'Caption cannot exceed 10,000 characters'],
     location: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

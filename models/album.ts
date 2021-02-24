@@ -16,6 +16,10 @@ const albumSchema = new Schema({
         ref: 'User',
         required: [true, 'Author Id is required'],
     },
+    title: {
+        type: String,
+        maxlength: [150, 'Title cannot exceed 150 characters'],
+    },
 
 },
 {

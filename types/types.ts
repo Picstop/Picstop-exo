@@ -76,6 +76,7 @@ export interface NewRequest extends Request {
 }
 
 export type Album = Document & {
+    title: string;
     posts: Array<mongoose.Schema.Types.ObjectId>;
     collaborators: Array<mongoose.Schema.Types.ObjectId>;
     author: mongoose.Schema.Types.ObjectId;

@@ -13,6 +13,7 @@ import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
 import Location from '../models/location';
 import Post from '../models/post';
+import Album from '../models/album';
 
 const logger = initLogger('ControllerUser');
 const SES = new aws.SES({
@@ -107,6 +108,8 @@ export default class UserController {
                     });
                     return Promise.all(reMakePost);
                 });
+            // TODO: Return albums to profiles with image from one post
+            // const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec();
             const userLocationSet = new Set(locations);
             const userLocations = [...userLocationSet];
             return res.status(200).json({ success: true, message: { user, userLocations } });

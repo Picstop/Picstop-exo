@@ -114,7 +114,7 @@ export default class LocationController {
 
                 // if (!post.images) images.push(null)
             }
-            console.log(newLocs);
+
             await newLocs.forEach(async (location) => {
                 // console.log(location.images);
                 if (location.images !== '') {

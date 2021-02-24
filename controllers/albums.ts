@@ -28,10 +28,11 @@ export default class AlbumController {
     }
 
     static async createAlbum(req: Request, res: Response) {
-        const { postId } = req.body;
+        const { postId, title } = req.body;
         const album = new Album({
             posts: [postId],
             author: req.user._id,
+            title,
         });
         album.save()
             .then(() => res.status(200).json({ success: true, message: 'Created album' }))
@@ -47,6 +48,27 @@ export default class AlbumController {
             .then(() => res.status(200).json({ success: true, message: 'Successfully deleted album' }))
             .catch((err) => {
                 logger.error(`Error deleting album ${albumId} with error ${err}`);
+                return res.status(500).json({ success: false, message: err });
+            });
+    }
+
+    // edit Title
+    static async editTitle(req: Request, res: Response) {
+        const { title, albumId } = req.body;
+        Album.findByIdAndUpdate(albumId, { title }).exec()
+            .then(() => res.status(200).json({ success: true, message: 'Successfully updated title' }))
+            .catch((err) => {
+                logger.error(`Error updating title ${title} for ${albumId} with error ${err}`);
+                return res.status(500).json({ success: false, message: err });
+            });
+    }
+
+    static async getAlbum(req: Request, res: Response) {
+        const { albumId } = req.params;
+        Album.findById(albumId).populate([{ path: 'posts', model: 'Post' }]).orFail(new Error('Album not found')).exec()
+            .then((album) => res.status(200).json({ success: true, message: album.posts }))
+            .catch((err) => {
+                logger.error(`Error getting album ${albumId} with error ${err}`);
                 return res.status(500).json({ success: false, message: err });
             });
     }
