@@ -9,6 +9,7 @@ import * as AWS from 'aws-sdk';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import initLogger from '../core/logger';
+import Location from '../models/location';
 // import s3 from '../core/s3';
 import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
