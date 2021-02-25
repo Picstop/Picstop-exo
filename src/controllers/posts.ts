@@ -76,10 +76,7 @@ export default class PostController {
                     Bucket: s3Bucket,
                     Key: i,
                 }));
-                return Promise.all(imagePromises).then((urls) => {
-                    post.images = urls;
-                    return post;
-                });
+                return Promise.all(imagePromises).then((urls) => ({ ...post, images: urls }));
             })
             .then((result) => res.status(200).json({
                 success: true,
@@ -102,10 +99,7 @@ export default class PostController {
                         Bucket: s3Bucket,
                         Key: i,
                     }));
-                    return Promise.all(imagePromises).then((urls) => {
-                        z.images = urls;
-                        return z;
-                    });
+                    return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
                 });
                 return Promise.all(reMakePost);
             })
@@ -154,7 +148,7 @@ export default class PostController {
         const getStr = `SeenPosts:${userId}`;
         let PostList;
         const set = await client.get(getStr);
-        if (set == null || set === '') {
+        if (set === null || set === '') {
             PostList = [];
         } else {
             const stringSet = set.toString();
@@ -192,10 +186,7 @@ export default class PostController {
                         Bucket: s3Bucket,
                         Key: i,
                     }));
-                    return Promise.all(imagePromises).then((urls) => {
-                        z.images = urls;
-                        return z;
-                    });
+                    return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
                 });
                 return Promise.all(reMakePost);
             })

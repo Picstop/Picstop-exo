@@ -1,5 +1,5 @@
 import mongoose, { Document } from 'mongoose';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 export type comparePasswordFunction = (
   p1: string,

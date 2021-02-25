@@ -1,9 +1,8 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import express from 'express';
+import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
 
 import initLogger from '../core/logger';
-import { IUser, comparePasswordFunction } from '../types/types';
+import { IUser } from '../types/types';
 
 const logger = initLogger('UserModel');
 const passwordRegex = /^(?=.[A-Za-z])(?=.\d)[A-Za-z\d]*$/;

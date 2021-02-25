@@ -3,23 +3,22 @@ import mongoose, { Schema } from 'mongoose';
 import { UserReport } from '../types/types';
 
 const userReportSchema = new Schema({
-    reason: { 
+    reason: {
         type: 'string',
-        required: [true, 'Reason is required']
+        required: [true, 'Reason is required'],
     },
-   reportedBy: {
+    reportedBy: {
 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'Report author ID is required']
+        required: [true, 'Report author ID is required'],
 
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'Report user ID is required']
-    }
-       
+        required: [true, 'Report user ID is required'],
+    },
 
 },
 {
