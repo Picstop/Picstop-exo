@@ -9,6 +9,7 @@ const CommentSchema = new Schema(
         },
         comment: {
             type: String,
+            maxlength: [10000, 'Comment cannot exceed 100000 characters'],
         },
         likes: [{
             type: mongoose.Schema.Types.ObjectId,

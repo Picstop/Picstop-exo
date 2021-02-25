@@ -74,3 +74,11 @@ export type LocationReport = Document & {
 export interface NewRequest extends Request {
     user: IUser;
 }
+
+export type Album = Document & {
+    title: string;
+    posts: Array<mongoose.Schema.Types.ObjectId>;
+    collaborators: Array<mongoose.Schema.Types.ObjectId>;
+    author: mongoose.Schema.Types.ObjectId;
+    coverImage: string;
+}

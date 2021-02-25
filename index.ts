@@ -12,6 +12,7 @@ import reportRoutes from './src/routes/reports';
 import initLogger from './src/core/logger';
 import db from './src/database/database';
 import userRoutes from './src/routes/users';
+import albumRoutes from './src/routes/albums'
 
 dotenv.config();
 const app = express();
@@ -35,6 +36,7 @@ app.use('/user', userRoutes);
 app.use('/comments', commentRoutes);
 app.use('/posts', postRoutes);
 app.use('/report', reportRoutes);
+app.use('/albums', albumRoutes);
 
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
