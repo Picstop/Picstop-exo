@@ -85,6 +85,7 @@ const UserSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Location',
     }],
+    identifiers: [{ type: String, unique: true }],
 
 },
 {

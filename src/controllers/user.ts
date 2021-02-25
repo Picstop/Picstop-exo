@@ -8,6 +8,7 @@ import aws from 'aws-sdk';
 import * as AWS from 'aws-sdk';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { Error } from 'mongoose';
 import initLogger from '../core/logger';
 import Location from '../models/location';
 // import s3 from '../core/s3';
@@ -108,7 +109,7 @@ export default class UserController {
             const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec()
                 .then(async (albs) => {
                     // console.log(albs);
-                    for (const album of albs) {
+                    albs.map(async (album) => {
                         const post = await Post.findById(album.posts[0]).orFail(new Error('Error finding post in album')).exec();
                         const download = await s3.getSignedUrl('getObject', {
                             Bucket: s3Bucket,
@@ -116,7 +117,8 @@ export default class UserController {
                         });
 
                         album.coverImage = download;
-                    }
+                        return album;
+                    });
                     return albs;
                 });
             const userLocationSet = new Set(locations);
@@ -528,7 +530,7 @@ export default class UserController {
             const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec()
                 .then(async (albs) => {
                     // console.log(albs);
-                    for (const album of albs) {
+                    albs.map(async (album) => {
                         const post = await Post.findById(album.posts[0]).orFail(new Error('Error finding post in album')).exec();
                         const download = await s3.getSignedUrl('getObject', {
                             Bucket: s3Bucket,
@@ -536,7 +538,8 @@ export default class UserController {
                         });
 
                         album.coverImage = download;
-                    }
+                        return album;
+                    });
                     return albs;
                 });
             const userLocationSet = new Set(locations);
@@ -546,5 +549,42 @@ export default class UserController {
             logger.error(`Error getting user ${req.user._id} with error: ${error}`);
             return res.status(500).json({ success: false, message: error.message });
         }
+    }
+
+    // User.findByIdAndUpdate(req.user._id, { name, bio }, { runValidators: true })
+    // .orFail(new Error('User not found!'))
+    // .exec()
+    // .then(() => res.status(200).json({ success: true, message: 'Successfully updated name and bio. ' }))
+    // .catch((error: Error) => {
+    //     if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
+    //     logger.error(`Error updating profile for user ${req.user._id}`);
+    //     return res.status(500).json({ success: false, message: error });
+    // });
+
+    async addDeviceIdentifier(req: Request, res: Response) {
+        const { token } = req.body;
+        const update = { $addToSet: { identifiers: token } };
+        const user = await User.findByIdAndUpdate(req.user._id, update, { runValidators: true })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Device id successfully added' }))
+            .catch((error: Error) => {
+                if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
+                logger.error(`Error updating profile for user ${req.user._id}`);
+                return res.status(500).json({ success: false, message: error });
+            });
+    }
+
+    async removeDeviceIdentifier(req: Request, res: Response) {
+        const { token } = req.body;
+        const update = { $pull: { identifiers: token } };
+        const user = await User.findByIdAndUpdate(req.user._id, update)
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Device id successfully removed' }))
+            .catch((error: Error) => {
+                logger.error(`Error updating profile for user ${req.user._id}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
 }

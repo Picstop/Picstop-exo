@@ -20,6 +20,7 @@ export type IUser = Document & {
   bio: string;
   profilePic: string;
   savedLocations: Array<mongoose.Schema.Types.ObjectId>;
+  identifiers: Array<String>;
 
   comparePassword: comparePasswordFunction;
 };

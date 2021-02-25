@@ -25,7 +25,7 @@ export default class AlbumMiddleware {
         const { albumId, postId } = req.body;
         Album.findById(albumId).orFail(new Error('Album not found')).exec()
             .then((album) => {
-                const post = album.posts.some((post) => `${post}` == (postId));
+                const post = album.posts.some((p) => `${p}` === (postId));
                 if (post) {
                     return next();
                 }
@@ -42,7 +42,7 @@ export default class AlbumMiddleware {
         const { albumId, postId } = req.body;
         Album.findById(albumId).orFail(new Error('Album not found')).exec()
             .then((album) => {
-                const post = album.posts.some((post) => `${post}` == (postId));
+                const post = album.posts.some((p) => `${p}` === (postId));
                 if (post) {
                     return res.status(500).json({ success: false, message: 'Post is already in album.' });
                 }
@@ -59,7 +59,7 @@ export default class AlbumMiddleware {
         const { albumId } = req.body;
         Album.findById(albumId).orFail(new Error('Post not found')).exec()
             .then((album) => {
-                if (`${album.author}` == req.user._id) {
+                if (`${album.author}` === req.user._id) {
                     return next();
                 }
                 return res.status(401).json({ success: false, message: 'User is not author of album' });
