@@ -80,4 +80,5 @@ export type Album = Document & {
     posts: Array<mongoose.Schema.Types.ObjectId>;
     collaborators: Array<mongoose.Schema.Types.ObjectId>;
     author: mongoose.Schema.Types.ObjectId;
+    coverImage: string;
 }

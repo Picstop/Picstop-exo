@@ -1,3 +1,5 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
 import { NextFunction, Response } from 'express';
 
 import async from 'async';
@@ -108,11 +110,23 @@ export default class UserController {
                     });
                     return Promise.all(reMakePost);
                 });
-            // TODO: Return albums to profiles with image from one post
-            // const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec();
+            const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec()
+                .then(async (albs) => {
+                    // console.log(albs);
+                    for (const album of albs) {
+                        const post = await Post.findById(album.posts[0]).orFail(new Error('Error finding post in album')).exec();
+                        const download = await s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: post.images[0],
+                        });
+
+                        album.coverImage = download;
+                    }
+                    return albs;
+                });
             const userLocationSet = new Set(locations);
             const userLocations = [...userLocationSet];
-            return res.status(200).json({ success: true, message: { user, userLocations } });
+            return res.status(200).json({ success: true, message: { user, userLocations, albums } });
         } catch (error) {
             logger.error(`Error getting user by username: ${username} with error: ${error}`);
             return res.status(500).json({ success: false, message: error.message });
@@ -487,6 +501,57 @@ export default class UserController {
         } catch (error) {
             logger.error(`Error searching ${req.body.query} with error ${error}`);
             return res.status(500).json({ success: false, message: error });
+        }
+    }
+
+    async getMe(req: Request, res: Response) {
+        try {
+            const user = await User.findById(req.user._id)
+                .orFail(new Error('User not found!'))
+                .exec()
+                .then(async (usr) => {
+                    const url = await s3.getSignedUrl('getObject', {
+                        Bucket: s3Bucket,
+                        Key: `${usr._id}/pfp.jpg`,
+                    });
+                    usr.profilePic = url;
+                    return usr;
+                });
+
+            const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
+                .then((posts) => {
+                    const reMakePost = posts.map((z) => {
+                        const imagePromises = z.images.map((i) => s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: i,
+                        }));
+                        return Promise.all(imagePromises).then((urls) => {
+                            z.images = urls;
+                            return z;
+                        });
+                    });
+                    return Promise.all(reMakePost);
+                });
+            const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec()
+                .then(async (albs) => {
+                    // console.log(albs);
+                    for (const album of albs) {
+                        const post = await Post.findById(album.posts[0]).orFail(new Error('Error finding post in album')).exec();
+                        const download = await s3.getSignedUrl('getObject', {
+                            Bucket: s3Bucket,
+                            Key: post.images[0],
+                        });
+
+                        album.coverImage = download;
+                    }
+                    return albs;
+                });
+            const userLocationSet = new Set(locations);
+            const userLocations = [...userLocationSet];
+            return res.status(200).json({ success: true, message: { user, userLocations, albums } });
+        } catch (error) {
+            logger.error(`Error getting user ${req.user._id} with error: ${error}`);
+            return res.status(500).json({ success: false, message: error.message });
         }
     }
 }

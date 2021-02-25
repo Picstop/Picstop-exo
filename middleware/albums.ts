@@ -33,7 +33,7 @@ export default class AlbumMiddleware {
             })
             .catch((error) => {
                 logger.error(`Error getting album ${albumId} with error ${error}`);
-                return res.status(500).json({ success: false, message: error });
+                return res.status(500).json({ success: false, message: error.message });
             });
     }
 
@@ -44,13 +44,13 @@ export default class AlbumMiddleware {
             .then((album) => {
                 const post = album.posts.some((post) => `${post}` == (postId));
                 if (post) {
-                    return res.status(500).json({ success: false, message: 'Post is not in album.' });
+                    return res.status(500).json({ success: false, message: 'Post is already in album.' });
                 }
                 return next();
             })
             .catch((error) => {
                 logger.error(`Error getting album ${albumId} with error ${error}`);
-                return res.status(500).json({ success: false, message: error });
+                return res.status(500).json({ success: false, message: error.message });
             });
     }
 
@@ -59,14 +59,14 @@ export default class AlbumMiddleware {
         const { albumId } = req.body;
         Album.findById(albumId).orFail(new Error('Post not found')).exec()
             .then((album) => {
-                if (album.author === req.user._id) {
+                if (`${album.author}` == req.user._id) {
                     return next();
                 }
                 return res.status(401).json({ success: false, message: 'User is not author of album' });
             })
             .catch((error) => {
                 logger.error(`Error getting album ${albumId} with error ${error}`);
-                return res.status(500).json({ success: false, message: error });
+                return res.status(500).json({ success: false, message: error.message });
             });
     }
 

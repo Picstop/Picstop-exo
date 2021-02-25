@@ -20,6 +20,9 @@ const albumSchema = new Schema({
         type: String,
         maxlength: [150, 'Title cannot exceed 150 characters'],
     },
+    coverImage: {
+        type: String,
+    },
 
 },
 {

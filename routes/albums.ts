@@ -35,4 +35,6 @@ router.patch('/title', isAuthenticated,
 
 // get album
 
-router.get('/get/:id', isAuthenticated, async (req: Request, res) => AlbumController.getAlbum(req, res));
+router.get('/get/:albumId', isAuthenticated, async (req: Request, res) => AlbumController.getAlbum(req, res));
+
+export default router;

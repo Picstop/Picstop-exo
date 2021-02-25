@@ -10,7 +10,7 @@ export default class AlbumController {
     static async addToAlbum(req: Request, res: Response) {
         const { postId, albumId } = req.body;
         Album.findByIdAndUpdate(albumId, { $push: { posts: postId } }).exec()
-            .then(() => res.status(200).json({ success: true, message: 'Successfully added post to album' }))
+            .then((alb) => res.status(200).json({ success: true, message: alb }))
             .catch((err) => {
                 logger.error(`Error pushing post ${postId} to album ${albumId} with error ${err}`);
                 return res.status(500).json({ success: false, message: 'Error pushing post to album' });
@@ -35,7 +35,7 @@ export default class AlbumController {
             title,
         });
         album.save()
-            .then(() => res.status(200).json({ success: true, message: 'Created album' }))
+            .then(() => res.status(200).json({ success: true, message: album }))
             .catch((err) => {
                 logger.error(`Error creating album with error ${err}`);
                 res.status(500).json({ success: false, message: err });
@@ -65,11 +65,12 @@ export default class AlbumController {
 
     static async getAlbum(req: Request, res: Response) {
         const { albumId } = req.params;
-        Album.findById(albumId).populate([{ path: 'posts', model: 'Post' }]).orFail(new Error('Album not found')).exec()
+        console.log(albumId);
+        return Album.findById(albumId).populate([{ path: 'posts', model: 'Post' }]).orFail(new Error('Album not found')).exec()
             .then((album) => res.status(200).json({ success: true, message: album.posts }))
             .catch((err) => {
                 logger.error(`Error getting album ${albumId} with error ${err}`);
-                return res.status(500).json({ success: false, message: err });
+                return res.status(500).json({ success: false, message: err.message });
             });
     }
 }

@@ -29,12 +29,7 @@ router.get('/getById/:id', isAuthenticated, userMiddleware.allowedToViewById, as
 
 router.get('/getByArray', isAuthenticated, (req: Request, res) => userController.getUsersByArray(req, res));
 
-router.get('/', isAuthenticated, (req, res) => {
-    if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Cannot get user, please login' });
-    }
-    return res.status(200).json({ success: true, message: req.user });
-});
+router.get('/', isAuthenticated, (req: Request, res) => userController.getMe(req, res));
 
 router.post('/follow',
     isAuthenticated,

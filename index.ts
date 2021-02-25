@@ -15,6 +15,7 @@ import initLogger from './core/logger';
 import db from './database/database';
 import Location from './models/location';
 import userRoutes from './routes/users';
+import albumRoutes from './routes/albums';
 
 import { RedisStore, client } from './core/redis';
 
@@ -40,6 +41,7 @@ app.use('/user', userRoutes);
 app.use('/comments', commentRoutes);
 app.use('/posts', postRoutes);
 app.use('/report', reportRoutes);
+app.use('/albums', albumRoutes);
 
 db.then(async () => {
     logger.info('Successfully Connected to MongoDB');
