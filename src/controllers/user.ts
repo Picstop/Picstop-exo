@@ -389,7 +389,7 @@ export default class UserController {
                             Html: {
                                 Charset: 'UTF-8',
                                 // eslint-disable-next-line max-len
-                                Data: `You are receiving this because you (or someone else) have requested the reset of the password for your account.<br/><br/>Please click on the following link, or paste this into your browser to reset your password:<br/><br/> https://${req.headers.host}/user/reset/${token}<br/><br/>If you did not request this, please ignore this email and your password will remain unchanged.<br/>`,
+                                Data: `You are receiving this because you (or someone else) have requested the reset of the password for your account.<br/><br/>Please click on the following link, or paste this into your browser to reset your password:<br/><br/> picstop://user/reset/${token}<br/><br/>If you did not request this, please ignore this email and your password will remain unchanged.<br/>`,
                             },
                         },
                         Subject: {
