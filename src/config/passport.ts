@@ -19,6 +19,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
                 })
                 .catch((e) => next(e));
         });
+    } else {
+        return res.status(401).json({ success: false, message: 'Missing token' });
     }
-    return res.status(401).json({ success: false, message: 'Missing token' });
 };
