@@ -262,13 +262,12 @@ export default class PostController {
                 await Notification.findOneAndDelete({ relatedUserId: req.user._id, relatedPostId: post._id, notificationType: 'LIKE_POST' })
                     .orFail(new Error('Could not delete notification'))
                     .exec()
-                    .then(() => console.log('deleted'))
                     .catch((err) => logger.error(`Error while unliking a post notification ${id}: ${err}`));
                 return post;
             })
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
-                logger.error(`Error while liking a post ${id}: ${err}`);
+                logger.error(`Error while unliking a post ${id}: ${err}`);
                 return res.status(500).json({ success: false, message: err.message });
             });
     }

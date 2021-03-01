@@ -329,7 +329,7 @@ export default class UserController {
                         pushType: 'alert',
                         badge: user.notifications,
                         payload: {
-                            postId: id,
+                            userId: user._id,
                         },
                     });
                     return apnProvider.send(notif, user.identifiers);

@@ -41,7 +41,7 @@ export type Location = Document & {
 };
 
 export type Post = Document & {
-  authorId: mongoose.Schema.Types.ObjectId ;
+  authorId: mongoose.Schema.Types.ObjectId;
   images: string[];
   caption: string;
   location: mongoose.Schema.Types.ObjectId;
