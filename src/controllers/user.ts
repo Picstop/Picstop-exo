@@ -564,7 +564,7 @@ export default class UserController {
     async addDeviceIdentifier(req: Request, res: Response) {
         const { token } = req.body;
         const update = { $addToSet: { identifiers: token } };
-        const user = await User.findByIdAndUpdate(req.user._id, update, { runValidators: true })
+        User.findByIdAndUpdate(req.user._id, update, { runValidators: true })
             .orFail(new Error('User not found!'))
             .exec()
             .then(() => res.status(200).json({ success: true, message: 'Device id successfully added' }))
@@ -578,7 +578,7 @@ export default class UserController {
     async removeDeviceIdentifier(req: Request, res: Response) {
         const { token } = req.body;
         const update = { $pull: { identifiers: token } };
-        const user = await User.findByIdAndUpdate(req.user._id, update)
+        await User.findByIdAndUpdate(req.user._id, update)
             .orFail(new Error('User not found!'))
             .exec()
             .then(() => res.status(200).json({ success: true, message: 'Device id successfully removed' }))

@@ -20,7 +20,7 @@ export type IUser = Document & {
   bio: string;
   profilePic: string;
   savedLocations: Array<mongoose.Schema.Types.ObjectId>;
-  identifiers: Array<String>;
+  identifiers: Array<string>;
 
   comparePassword: comparePasswordFunction;
 };
@@ -82,4 +82,13 @@ export type Album = Document & {
     collaborators: Array<mongoose.Schema.Types.ObjectId>;
     author: mongoose.Schema.Types.ObjectId;
     coverImage: string;
+}
+
+export type Notification = Document & {
+  userId: mongoose.Schema.Types.ObjectId;
+  relatedUserId: mongoose.Schema.Types.ObjectId;
+  notificationType: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'FOLLOWED' | 'FOLLOW_REQUEST';
+  comment?: string;
+  viewed: boolean,
+
 }

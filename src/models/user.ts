@@ -86,7 +86,6 @@ const UserSchema = new Schema({
         ref: 'Location',
     }],
     identifiers: [{ type: String, unique: true }],
-
 },
 {
     timestamps: true,

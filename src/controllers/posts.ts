@@ -4,12 +4,16 @@ import mongoose from 'mongoose';
 import { Response } from 'express';
 
 import * as AWS from 'aws-sdk';
+import * as apn from 'apn';
+import process from 'process';
 import Post from '../models/post';
 import { NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
+import Notification from '../models/notification';
 import { client } from '../core/redis';
 import { removeNullUndef } from '../core/helpers';
+import { apnProvider } from '../config/notifs';
 
 const logger = initLogger('ControllerPosts');
 
@@ -212,9 +216,37 @@ export default class PostController {
 
     async likePost(req: Request, res: Response) {
         const { id } = req.params;
+
         return Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } }, { new: true })
             .orFail(new Error('Post not found!'))
             .exec()
+            .then(async (post) => {
+                const notifiedUser = await User.findById(post.authorId);
+                // if (notifiedUser._id === id) return result;
+                const notifCount = await Notification.countDocuments({ userId: notifiedUser._id, viewed: false }).exec();
+                const newNotif = await new Notification({
+                    userId: notifiedUser._id,
+                    relatedUserId: req.user._id,
+                    notificationType: 'LIKE_POST',
+                }).save();
+                console.log(newNotif._id);
+                const notif = new apn.Notification({
+                    id: newNotif._id,
+                    category: 'LIKE_POST',
+                    collapseId: post._id,
+                    title: 'New Like',
+                    topic: process.env.APP_BUNDLE_ID,
+                    body: `${req.user.username} liked your post`,
+                    expiry: Math.floor(Date.now() / 1000) + 600,
+                    sound: 'default',
+                    pushType: 'alert',
+                    badge: notifCount + 1,
+                    payload: {
+                        postId: id,
+                    },
+                });
+                return apnProvider.send(notif, notifiedUser.identifiers);
+            })
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error while liking a Post ${id}: ${err}`);

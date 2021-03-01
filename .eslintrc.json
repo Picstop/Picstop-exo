@@ -17,6 +17,7 @@
         "@typescript-eslint",
         "unused-imports"
     ],
+    "ignorePatterns": ["dist/"],
     "rules": {
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": "off",
@@ -39,6 +40,7 @@
             }
         ],
         "class-methods-use-this": "off" ,
-        "no-underscore-dangle": "off"
+        "no-underscore-dangle": "off",
+        "import/prefer-default-export": "off"
     }
 }
