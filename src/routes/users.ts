@@ -91,4 +91,8 @@ router.post('/reset/:token', userMiddleware.checkPasswordMatch, (req: Request, r
 
 router.post('/search', isAuthenticated, (req: Request, res) => userController.search(req, res));
 
+router.patch('/device/add', isAuthenticated, (req: Request, res) => userController.addDeviceIdentifier(req, res));
+
+router.patch('/device/remove', isAuthenticated, (req: Request, res) => userController.removeDeviceIdentifier(req, res));
+
 export default router;

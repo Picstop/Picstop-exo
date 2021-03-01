@@ -20,6 +20,8 @@ export type IUser = Document & {
   bio: string;
   profilePic: string;
   savedLocations: Array<mongoose.Schema.Types.ObjectId>;
+  identifiers: Array<string>;
+  notifications: number;
 
   comparePassword: comparePasswordFunction;
 };
@@ -39,7 +41,7 @@ export type Location = Document & {
 };
 
 export type Post = Document & {
-  authorId: mongoose.Schema.Types.ObjectId ;
+  authorId: mongoose.Schema.Types.ObjectId;
   images: string[];
   caption: string;
   location: mongoose.Schema.Types.ObjectId;
@@ -81,4 +83,12 @@ export type Album = Document & {
     collaborators: Array<mongoose.Schema.Types.ObjectId>;
     author: mongoose.Schema.Types.ObjectId;
     coverImage: string;
+}
+
+export type Notification = Document & {
+  userId: mongoose.Schema.Types.ObjectId;
+  relatedUserId: mongoose.Schema.Types.ObjectId;
+  relatedPostId: mongoose.Schema.Types.ObjectId;
+  notificationType: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'FOLLOWED' | 'FOLLOW_REQUEST' | 'REQUEST_ACCEPTED';
+  comment?: string;
 }

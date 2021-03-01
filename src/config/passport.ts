@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable import/prefer-default-export */
 // import { Strategy as LocalStrategy } from 'passport-local';
 import { Request, Response, NextFunction } from 'express';

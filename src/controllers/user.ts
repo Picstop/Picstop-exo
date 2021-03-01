@@ -5,9 +5,11 @@ import async from 'async';
 
 import crypto from 'crypto';
 import aws from 'aws-sdk';
+import * as apn from 'apn';
 import * as AWS from 'aws-sdk';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { Error } from 'mongoose';
 import initLogger from '../core/logger';
 import Location from '../models/location';
 // import s3 from '../core/s3';
@@ -15,6 +17,8 @@ import User from '../models/user';
 import { IUser, NewRequest as Request } from '../types/types';
 import Post from '../models/post';
 import Album from '../models/album';
+import Notification from '../models/notification';
+import { apnProvider } from '../config/notifs';
 
 const logger = initLogger('ControllerUser');
 const SES = new aws.SES({
@@ -91,7 +95,7 @@ export default class UserController {
                         Bucket: s3Bucket,
                         Key: `${usr._id}/pfp.jpg`,
                     });
-                    return { ...usr, profilePic: url };
+                    return { ...JSON.parse(JSON.stringify(usr)), profilePic: url };
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
@@ -101,14 +105,14 @@ export default class UserController {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
+                        return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(z)), images: urls }));
                     });
                     return Promise.all(reMakePost);
                 });
             const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec()
                 .then(async (albs) => {
                     // console.log(albs);
-                    for (const album of albs) {
+                    albs.map(async (album) => {
                         const post = await Post.findById(album.posts[0]).orFail(new Error('Error finding post in album')).exec();
                         const download = await s3.getSignedUrl('getObject', {
                             Bucket: s3Bucket,
@@ -116,7 +120,8 @@ export default class UserController {
                         });
 
                         album.coverImage = download;
-                    }
+                        return album;
+                    });
                     return albs;
                 });
             const userLocationSet = new Set(locations);
@@ -150,7 +155,7 @@ export default class UserController {
                         Bucket: s3Bucket,
                         Key: `${id}/pfp.jpg`,
                     });
-                    return { ...usr, profilePic: url };
+                    return { ...JSON.parse(JSON.stringify(usr)), profilePic: url };
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
@@ -160,7 +165,7 @@ export default class UserController {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
+                        return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(z)), images: urls }));
                     });
                     return Promise.all(reMakePost);
                 });
@@ -181,14 +186,60 @@ export default class UserController {
                 logger.error(`Error getting user ${id} 's privacy setting`);
                 return res.status(500).json({ success: false, message: 'Error getting user\'s privacy setting' });
             } if (isPrivate) {
-                await User.findByIdAndUpdate(id, { $push: { followerRequests: req.user._id } })
+                await User.findByIdAndUpdate(id, { $push: { followerRequests: req.user._id }, $inc: { notifications: 1 } })
                     .orFail(new Error('User not found!'))
-                    .exec();
+                    .exec()
+                    .then(async (user) => {
+                        const newNotif = await new Notification({
+                            userId: user._id,
+                            relatedUserId: req.user.id,
+                            notificationType: 'FOLLOW_REQUEST',
+                        }).save();
+                        const notif = new apn.Notification({
+                            id: newNotif._id,
+                            category: 'FOLLOW_REQUEST',
+                            title: 'New follow request',
+                            topic: process.env.APP_BUNDLE_ID,
+                            body: `${req.user.username} has requested to follow you`,
+                            expiry: Math.floor(Date.now() / 1000) + 600,
+                            sound: 'default',
+                            pushType: 'alert',
+                            badge: user.notifications,
+                            payload: {
+                                userId: user._id,
+                            },
+                        });
+                        apnProvider.send(notif, user.identifiers);
+                        return user;
+                    });
                 return res.status(200).json({ success: true, message: 'Successfully requested to follow user' });
             }
             await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } })
                 .orFail(new Error('User not found!'))
-                .exec();
+                .exec()
+                .then(async (user) => {
+                    const newNotif = await new Notification({
+                        userId: user._id,
+                        relatedUserId: req.user.id,
+                        notificationType: 'FOLLOWED',
+                    }).save();
+                    const notif = new apn.Notification({
+                        id: newNotif._id,
+                        category: 'FOLLOWED',
+                        title: 'New follower',
+                        topic: process.env.APP_BUNDLE_ID,
+                        body: `${req.user.username} is now following you`,
+                        expiry: Math.floor(Date.now() / 1000) + 600,
+                        sound: 'default',
+                        pushType: 'alert',
+                        badge: user.notifications,
+                        payload: {
+                            userId: user._id,
+                        },
+                    });
+                    apnProvider.send(notif, user.identifiers);
+                    return user;
+                });
             await User.findByIdAndUpdate(req.user._id, { $push: { following: id } })
                 .orFail(new Error('User not found!'))
                 .exec();
@@ -258,9 +309,31 @@ export default class UserController {
             await User.findByIdAndUpdate(req.user._id, { $pull: { followerRequests: id }, $push: { followers: id } })
                 .orFail(new Error('User not found!'))
                 .exec();
-            await User.findByIdAndUpdate(id, { $push: { following: req.user._id } })
+            await User.findByIdAndUpdate(id, { $push: { following: req.user._id }, $inc: { notifications: 1 } })
                 .orFail(new Error('User not found!'))
-                .exec();
+                .exec()
+                .then(async (user) => {
+                    const newNotif = await new Notification({
+                        userId: user._id,
+                        relatedUserId: req.user._id,
+                        notificationType: 'REQUEST_ACCEPTED',
+                    }).save();
+                    const notif = new apn.Notification({
+                        id: newNotif._id,
+                        category: 'REQUEST_ACCEPTED',
+                        title: 'Follow request accepted',
+                        topic: process.env.APP_BUNDLE_ID,
+                        body: `${req.user.username} has accepted your follow request`,
+                        expiry: Math.floor(Date.now() / 1000) + 600,
+                        sound: 'default',
+                        pushType: 'alert',
+                        badge: user.notifications,
+                        payload: {
+                            userId: user._id,
+                        },
+                    });
+                    return apnProvider.send(notif, user.identifiers);
+                });
             return res.status(200).json({ success: true, message: 'Successfully accepted follow request' });
         } catch (error) {
             logger.error(`Error accepting ${id} 's follow request for ${req.user._id} with error: ${error}`);
@@ -273,6 +346,14 @@ export default class UserController {
         User.findByIdAndUpdate(id, { $pull: { followerRequests: req.user._id } })
             .orFail(new Error('User not found!'))
             .exec()
+            .then(async (user) => {
+                await Notification.findOneAndDelete({ relatedUserId: req.user._id, userId: user._id, notificationType: 'FOLLOW_REQUEST' })
+                    .orFail(new Error('Could not delete notification'))
+                    .exec()
+                    .then(() => console.log('deleted'))
+                    .catch((err) => logger.error(`Error while removing follow request notification ${id}: ${err}`));
+                return user;
+            })
             .then(() => res.status(200).json({ success: true, message: `Successfully removed follow request to ${id}` }))
             .catch((error) => {
                 logger.error(`Error removing follow request to ${id} by ${req.user._id} with error: ${error}`);
@@ -528,7 +609,7 @@ export default class UserController {
             const albums = await Album.find({ author: user._id }).populate([{ path: 'posts', model: 'Post' }]).exec()
                 .then(async (albs) => {
                     // console.log(albs);
-                    for (const album of albs) {
+                    albs.map(async (album) => {
                         const post = await Post.findById(album.posts[0]).orFail(new Error('Error finding post in album')).exec();
                         const download = await s3.getSignedUrl('getObject', {
                             Bucket: s3Bucket,
@@ -536,7 +617,8 @@ export default class UserController {
                         });
 
                         album.coverImage = download;
-                    }
+                        return album;
+                    });
                     return albs;
                 });
             const userLocationSet = new Set(locations);
@@ -546,5 +628,42 @@ export default class UserController {
             logger.error(`Error getting user ${req.user._id} with error: ${error}`);
             return res.status(500).json({ success: false, message: error.message });
         }
+    }
+
+    // User.findByIdAndUpdate(req.user._id, { name, bio }, { runValidators: true })
+    // .orFail(new Error('User not found!'))
+    // .exec()
+    // .then(() => res.status(200).json({ success: true, message: 'Successfully updated name and bio. ' }))
+    // .catch((error: Error) => {
+    //     if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
+    //     logger.error(`Error updating profile for user ${req.user._id}`);
+    //     return res.status(500).json({ success: false, message: error });
+    // });
+
+    async addDeviceIdentifier(req: Request, res: Response) {
+        const { token } = req.body;
+        const update = { $addToSet: { identifiers: token } };
+        User.findByIdAndUpdate(req.user._id, update, { runValidators: true })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Device id successfully added' }))
+            .catch((error: Error) => {
+                if (error.message.includes('Validation')) return res.status(400).json({ success: false, message: error.message });
+                logger.error(`Error updating profile for user ${req.user._id}`);
+                return res.status(500).json({ success: false, message: error });
+            });
+    }
+
+    async removeDeviceIdentifier(req: Request, res: Response) {
+        const { token } = req.body;
+        const update = { $pull: { identifiers: token } };
+        await User.findByIdAndUpdate(req.user._id, update)
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Device id successfully removed' }))
+            .catch((error: Error) => {
+                logger.error(`Error updating profile for user ${req.user._id}`);
+                return res.status(500).json({ success: false, message: error });
+            });
     }
 }
