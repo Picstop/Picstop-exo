@@ -3,6 +3,7 @@ node_modules
 dist
 
 **.log
+*.p8
 
 # For jest coverage reports
 coverage
