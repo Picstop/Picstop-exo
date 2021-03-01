@@ -95,7 +95,7 @@ export default class UserController {
                         Bucket: s3Bucket,
                         Key: `${usr._id}/pfp.jpg`,
                     });
-                    return { ...usr, profilePic: url };
+                    return { ...JSON.parse(JSON.stringify(usr)), profilePic: url };
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
@@ -105,7 +105,7 @@ export default class UserController {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
+                        return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(z)), images: urls }));
                     });
                     return Promise.all(reMakePost);
                 });
@@ -155,7 +155,7 @@ export default class UserController {
                         Bucket: s3Bucket,
                         Key: `${id}/pfp.jpg`,
                     });
-                    return { ...usr, profilePic: url };
+                    return { ...JSON.parse(JSON.stringify(usr)), profilePic: url };
                 });
 
             const locations = await Post.find({ authorId: user._id }).populate([{ path: 'likes', model: 'User' }, { path: 'comments', model: 'Comment' }]).exec()
@@ -165,7 +165,7 @@ export default class UserController {
                             Bucket: s3Bucket,
                             Key: i,
                         }));
-                        return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
+                        return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(z)), images: urls }));
                     });
                     return Promise.all(reMakePost);
                 });

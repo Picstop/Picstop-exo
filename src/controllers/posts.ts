@@ -80,7 +80,7 @@ export default class PostController {
                     Bucket: s3Bucket,
                     Key: i,
                 }));
-                return Promise.all(imagePromises).then((urls) => ({ ...post, images: urls }));
+                return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(post)), images: urls }));
             })
             .then((result) => res.status(200).json({
                 success: true,
@@ -103,7 +103,7 @@ export default class PostController {
                         Bucket: s3Bucket,
                         Key: i,
                     }));
-                    return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
+                    return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(z)), images: urls }));
                 });
                 return Promise.all(reMakePost);
             })
@@ -190,7 +190,7 @@ export default class PostController {
                         Bucket: s3Bucket,
                         Key: i,
                     }));
-                    return Promise.all(imagePromises).then((urls) => ({ ...z, images: urls }));
+                    return Promise.all(imagePromises).then((urls) => ({ ...JSON.parse(JSON.stringify(z)), images: urls }));
                 });
                 return Promise.all(reMakePost);
             })
