@@ -1,4 +1,6 @@
 /* eslint-disable class-methods-use-this */
+/* eslint-disable no-shadow */
+/* eslint-disable eqeqeq */
 import { Response, NextFunction } from 'express';
 import Album from '../models/album';
 import { NewRequest as Request } from '../types/types';
