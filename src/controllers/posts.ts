@@ -227,9 +227,9 @@ export default class PostController {
                 const newNotif = await new Notification({
                     userId: notifiedUser._id,
                     relatedUserId: req.user._id,
+                    relatedPostId: post._id,
                     notificationType: 'LIKE_POST',
                 }).save();
-                console.log(newNotif._id);
                 const notif = new apn.Notification({
                     id: newNotif._id,
                     category: 'LIKE_POST',
@@ -259,6 +259,14 @@ export default class PostController {
         return Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
             .orFail(new Error('Post not found!'))
             .exec()
+            .then(async (post) => {
+                await Notification.findOneAndDelete({ relatedUserId: req.user._id, relatedPostId: post._id })
+                    .orFail(new Error('Could not delete notification'))
+                    .exec()
+                    .then(() => console.log('deleted'))
+                    .catch((err) => logger.error(`Error while liking a post ${id}: ${err}`));
+                return post;
+            })
             .then((result) => res.status(200).json({ success: true, message: result }))
             .catch((err) => {
                 logger.error(`Error while liking a post ${id}: ${err}`);

@@ -87,8 +87,7 @@ export type Album = Document & {
 export type Notification = Document & {
   userId: mongoose.Schema.Types.ObjectId;
   relatedUserId: mongoose.Schema.Types.ObjectId;
+  relatedPostId: mongoose.Schema.Types.ObjectId;
   notificationType: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'FOLLOWED' | 'FOLLOW_REQUEST';
   comment?: string;
-  viewed: boolean,
-
 }
