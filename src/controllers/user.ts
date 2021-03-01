@@ -1,4 +1,6 @@
 /* eslint-disable no-param-reassign */
+/* eslint-disable no-await-in-loop */
+
 import { Response } from 'express';
 
 import async from 'async';

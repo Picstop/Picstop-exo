@@ -1,5 +1,6 @@
 /* eslint-disable consistent-return */
 /* eslint-disable import/prefer-default-export */
+/* eslint-disable consistent-return */
 // import { Strategy as LocalStrategy } from 'passport-local';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';

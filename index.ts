@@ -22,6 +22,10 @@ app.use(helmet());
 
 const logger = initLogger('index');
 
+db.then(async () => {
+    logger.info('Successfully Connected to MongoDB');
+}).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
+
 app.use(morgan('dev')); // TODO: add support for different environments
 
 app.use(bodyParser.json());
@@ -37,10 +41,6 @@ app.use('/comments', commentRoutes);
 app.use('/posts', postRoutes);
 app.use('/report', reportRoutes);
 app.use('/albums', albumRoutes);
-
-db.then(async () => {
-    logger.info('Successfully Connected to MongoDB');
-}).catch((err) => logger.error(`Cannot connect to MongoDB: ${err}`));
 
 app.listen(port, () => {
     logger.info(`Ready on port ${port}`);
