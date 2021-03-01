@@ -21,6 +21,7 @@ export type IUser = Document & {
   profilePic: string;
   savedLocations: Array<mongoose.Schema.Types.ObjectId>;
   identifiers: Array<string>;
+  notifications: number;
 
   comparePassword: comparePasswordFunction;
 };
@@ -88,6 +89,6 @@ export type Notification = Document & {
   userId: mongoose.Schema.Types.ObjectId;
   relatedUserId: mongoose.Schema.Types.ObjectId;
   relatedPostId: mongoose.Schema.Types.ObjectId;
-  notificationType: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'FOLLOWED' | 'FOLLOW_REQUEST';
+  notificationType: 'LIKE_POST' | 'LIKE_COMMENT' | 'COMMENT_POST' | 'FOLLOWED' | 'FOLLOW_REQUEST' | 'REQUEST_ACCEPTED';
   comment?: string;
 }

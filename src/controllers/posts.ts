@@ -221,9 +221,8 @@ export default class PostController {
             .orFail(new Error('Post not found!'))
             .exec()
             .then(async (post) => {
-                const notifiedUser = await User.findById(post.authorId);
-                // if (notifiedUser._id === id) return result;
-                const notifCount = await Notification.countDocuments({ userId: notifiedUser._id, viewed: false }).exec();
+                const notifiedUser = await User.findByIdAndUpdate(post.authorId, { $inc: { notifications: 1 } });
+                if (notifiedUser._id === id) return post;
                 const newNotif = await new Notification({
                     userId: notifiedUser._id,
                     relatedUserId: req.user._id,
@@ -240,7 +239,7 @@ export default class PostController {
                     expiry: Math.floor(Date.now() / 1000) + 600,
                     sound: 'default',
                     pushType: 'alert',
-                    badge: notifCount + 1,
+                    badge: notifiedUser.notifications,
                     payload: {
                         postId: id,
                     },
@@ -260,11 +259,11 @@ export default class PostController {
             .orFail(new Error('Post not found!'))
             .exec()
             .then(async (post) => {
-                await Notification.findOneAndDelete({ relatedUserId: req.user._id, relatedPostId: post._id })
+                await Notification.findOneAndDelete({ relatedUserId: req.user._id, relatedPostId: post._id, notificationType: 'LIKE_POST' })
                     .orFail(new Error('Could not delete notification'))
                     .exec()
                     .then(() => console.log('deleted'))
-                    .catch((err) => logger.error(`Error while liking a post ${id}: ${err}`));
+                    .catch((err) => logger.error(`Error while unliking a post notification ${id}: ${err}`));
                 return post;
             })
             .then((result) => res.status(200).json({ success: true, message: result }))
