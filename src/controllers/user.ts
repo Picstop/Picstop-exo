@@ -412,16 +412,15 @@ export default class UserController {
         const { privacy } = req.body;
         if (privacy === false) {
             try {
-                await User.updateMany({ _id: { $in: req.user.followerRequests } }, { $push: { following: req.user._id } })
-                    .orFail(new Error('User not found!'))
-                    .exec();
-                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: { $each: req.user.followerRequests } }, $set: { followerRequests: [] } })
+                const user = await User.findById(req.user._id).orFail(new Error('Error finding user')).exec();
+                await User.updateMany({ _id: { $in: user.followerRequests } }, { $push: { following: req.user._id } }).exec();
+                await User.findByIdAndUpdate(req.user._id, { private: privacy, $push: { followers: { $each: user.followerRequests } }, $set: { followerRequests: [] } })
                     .orFail(new Error('User not found!'))
                     .exec();
                 return res.status(200).json({ success: true, message: 'Succesfully updated privacy setting and added all follower requests as followers' });
             } catch (error) {
                 logger.error(`Error updating privacy to ${privacy} and adding all follow requests as followers for user ${req.user._id} with error: ${error}`);
-                return res.status(500).json({ success: false, message: error });
+                return res.status(500).json({ success: false, message: error.message });
             }
         } else {
             return User.findByIdAndUpdate(req.user._id, { private: privacy })
@@ -430,7 +429,7 @@ export default class UserController {
                 .then(() => res.status(200).json({ success: true, message: 'Successfully updated privacy setting' }))
                 .catch((error: Error) => {
                     logger.error(`Error updating privacy to ${privacy} for user ${req.user._id} with error: ${error}`);
-                    return res.status(500).json({ success: false, message: error });
+                    return res.status(500).json({ success: false, message: error.message });
                 });
         }
     }
