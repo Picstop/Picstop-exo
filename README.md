@@ -31,7 +31,7 @@ start redis server upon computer boot:
 	REDIS_AGE=
 	NODE_ENV= development || production
 	LOGIN_USER=support@picstopapp.us
-	KEY_PATH=
+	KEY_FILE=
 	NOTIFS_KEY_ID=
 	TEAM_ID=
 	APP_BUNDLE_ID=

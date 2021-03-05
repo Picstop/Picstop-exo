@@ -95,4 +95,8 @@ router.patch('/device/add', isAuthenticated, (req: Request, res) => userControll
 
 router.patch('/device/remove', isAuthenticated, (req: Request, res) => userController.removeDeviceIdentifier(req, res));
 
+router.post('/notifications/all', isAuthenticated, (req: Request, res) => userController.getStaticNotifications(req, res));
+
+router.post('/notifications/followRequests', isAuthenticated, (req: Request, res) => userController.getFollowRequestNotifications(req, res));
+
 export default router;
