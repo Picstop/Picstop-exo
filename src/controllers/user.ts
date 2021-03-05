@@ -667,4 +667,34 @@ export default class UserController {
                 return res.status(500).json({ success: false, message: error });
             });
     }
+
+    async getStaticNotifications(req: Request, res: Response) {
+        const { cursor, limit } = req.body;
+        Notification.find({ userId: req.user._id, notificationType: { $ne: 'FOLLOW_REQUEST' } })
+            .orFail(new Error('Could not load notifications'))
+            .skip(cursor)
+            .sort({ date: 'desc' })
+            .limit(limit)
+            .exec()
+            .then((notifs) => res.status(200).json({ success: true, message: notifs }))
+            .catch((err: Error) => {
+                logger.error(`Error loading notifications: ${err}`);
+                return res.status(500).json({ success: false, message: err });
+            });
+    }
+
+    async getFollowRequestNotifications(req: Request, res: Response) {
+        const { cursor, limit } = req.body;
+        Notification.find({ userId: req.user._id, notificationType: 'FOLLOW_REQUEST' })
+            .orFail(new Error('Could not load notifications'))
+            .skip(cursor)
+            .sort({ date: 'desc' })
+            .limit(limit)
+            .exec()
+            .then((notifs) => res.status(200).json({ success: true, message: notifs }))
+            .catch((err: Error) => {
+                logger.error(`Error loading notifications: ${err}`);
+                return res.status(500).json({ success: false, message: err });
+            });
+    }
 }
