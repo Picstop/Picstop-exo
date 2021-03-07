@@ -21,6 +21,8 @@ const notificationSchema = new Schema({
     },
     notificationType: { type: String, required: true },
     comment: { type: String, required: false },
+}, {
+    timestamps: true,
 });
 
 export default mongoose.model<Notification>('Notification', notificationSchema);

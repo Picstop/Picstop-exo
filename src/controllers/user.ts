@@ -147,7 +147,6 @@ export default class UserController {
 
     async getUserById(req: Request, res: Response) {
         const { id } = req.params;
-        console.log(id);
         try {
             const user = await User.findById(id)
                 .orFail(new Error('User not found!'))
@@ -684,17 +683,24 @@ export default class UserController {
     }
 
     async getFollowRequestNotifications(req: Request, res: Response) {
-        const { cursor, limit } = req.body;
         Notification.find({ userId: req.user._id, notificationType: 'FOLLOW_REQUEST' })
-            .orFail(new Error('Could not load notifications'))
-            .skip(cursor)
             .sort({ date: 'desc' })
-            .limit(limit)
             .exec()
             .then((notifs) => res.status(200).json({ success: true, message: notifs }))
             .catch((err: Error) => {
                 logger.error(`Error loading notifications: ${err}`);
                 return res.status(500).json({ success: false, message: err });
+            });
+    }
+
+    async setNotifCountZero(req: Request, res: Response) {
+        User.findOneAndUpdate(req.user._id, { notifications: 0 })
+            .orFail(new Error('User not found!'))
+            .exec()
+            .then(() => res.status(200).json({ success: true, message: 'Successfully updated user' }))
+            .catch((err) => {
+                res.status(500).json({ success: false, message: err });
+                logger.error(`Error updating user: ${err}`);
             });
     }
 }

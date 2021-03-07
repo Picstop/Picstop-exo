@@ -97,6 +97,8 @@ router.patch('/device/remove', isAuthenticated, (req: Request, res) => userContr
 
 router.post('/notifications/all', isAuthenticated, (req: Request, res) => userController.getStaticNotifications(req, res));
 
-router.post('/notifications/followRequests', isAuthenticated, (req: Request, res) => userController.getFollowRequestNotifications(req, res));
+router.get('/notifications/followRequests', isAuthenticated, (req: Request, res) => userController.getFollowRequestNotifications(req, res));
+
+router.get('/notifications/reset', isAuthenticated, (req: Request, res) => userController.setNotifCountZero(req, res));
 
 export default router;
