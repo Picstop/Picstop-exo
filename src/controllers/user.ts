@@ -73,7 +73,7 @@ export default class UserController {
                         }, process.env.JWT_SECRET || '$$2d##dS#', {
                         }, (err, tk: String) => {
                             if (err)res.status(400).json({ success: false, message: err.message });
-                            res.status(200).json({ success: true, message: tk });
+                            res.status(200).json({ success: true, message: { user, token: tk } });
                         });
                     } return res.status(400).json({ success: false, message: 'Incorrect password' });
                 })
