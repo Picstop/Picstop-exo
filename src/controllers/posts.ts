@@ -11,7 +11,6 @@ import { NewRequest as Request } from '../types/types';
 import initLogger from '../core/logger';
 import User from '../models/user';
 import Notification from '../models/notification';
-import { client } from '../core/redis';
 import { removeNullUndef } from '../core/helpers';
 import { apnProvider } from '../config/notifs';
 
@@ -148,8 +147,8 @@ export default class PostController {
     }
 
     async getFeedSet(req: Request, res: Response) {
-        const { userId } = req.body;
-        const getStr = `SeenPosts:${userId}`;
+        const { userId, lastId } = req.body;
+        /* const getStr = `SeenPosts:${userId}`;
         let PostList;
         const set = await client.get(getStr);
         if (set === null || set === '') {
@@ -157,7 +156,7 @@ export default class PostController {
         } else {
             const stringSet = set.toString();
             PostList = stringSet.split(',');
-        }
+        } */
 
         User.findById(userId)
             .orFail(new Error('User not found!'))
@@ -168,21 +167,24 @@ export default class PostController {
                 usr.following.forEach((e) => {
                     followingArray.push(e.toString());
                 });
-                if (PostList.length < 1) {
-                    return Post.find({
+                let query;
+                if (!lastId) {
+                    query = {
                         authorId: {
                             $in: usr.following,
                         },
-                    }).limit(20);
+                    };
+                } else {
+                    query = {
+                        _id: {
+                            $gt: mongoose.Types.ObjectId(lastId),
+                        },
+                        authorId: {
+                            $in: usr.following,
+                        },
+                    };
                 }
-                return Post.find({
-                    _id: {
-                        $nin: PostList,
-                    },
-                    authorId: {
-                        $in: usr.following,
-                    },
-                }).limit(20);
+                return Post.find(query).limit(20);
             })
             .then((posts) => {
                 const reMakePost = posts.map((z) => {
@@ -194,16 +196,6 @@ export default class PostController {
                 });
                 return Promise.all(reMakePost);
             })
-            .then((posts) => new Promise((resolve, reject) => {
-                posts.forEach((p) => { PostList.push(p._id); });
-                if (PostList.length >= 1) {
-                    client.setex(getStr, 600, PostList.toString())
-                        .then(() => resolve(posts))
-                        .catch((err) => reject(err));
-                } else {
-                    resolve([]);
-                }
-            }))
             .then((result: any) => res.status(200).json({
                 success: true,
                 message: result,
