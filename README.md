@@ -1,4 +1,4 @@
-# Picstop
+# Picstop Backend API
 
 To start server:
 
